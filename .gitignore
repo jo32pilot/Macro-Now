@@ -2,3 +2,8 @@
 *.ui
 *.swp
 *.whl
+*.qr
+__pycache__/
+qtresources_rt
+ui_tests/
+*.qrc
