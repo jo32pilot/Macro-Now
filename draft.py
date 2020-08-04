@@ -11,35 +11,24 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QDoubleValidator
 from KeyWatcher import KeyWatcher
 from win32gui import PumpMessages
 from DoubleClickWidgets import EditLabel, MacroWidget
+from StepConstants import StepEnum, stepImage
 
 
 class Ui_MainWindow(object):
-
-    def updateText(self, lineEdit, editLabel):
-        new_text = lineEdit.text()
-        if new_text:
-            editLabel.text = new_text
-            editLabel.setText(new_text)
-        lineEdit.hide()
-        editLabel.show()
-
 
     def listWidgetAddEditLabel(self, text):
         item = QListWidgetItem()
         container = MacroWidget(self.listWidget)
 
-        lineEdit = QLineEdit()
-        editLabel = EditLabel(lineEdit, text)
-        lineEdit.hide()
-
-        lineEdit.returnPressed.connect(lambda: self.updateText(lineEdit, editLabel))
+        editLabel = EditLabel(text)
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
-        hLayout.addWidget(lineEdit)
+        hLayout.addWidget(editLabel.getLineEdit())
         hLayout.addWidget(QKeySequenceEdit())
 
         hLayout.addStretch()
@@ -49,24 +38,72 @@ class Ui_MainWindow(object):
         self.listWidget.addItem(item)
         self.listWidget.setItemWidget(item, container)
 
-    def listWidgetAddStep(self, step, pressTime):
+    #TODO maybe have class for list widget?
+
+    def listWidgetAddStep(self, stepType, data=None, pressTime=None):
         item = QListWidgetItem()
         container = QWidget()
 
-        lineEdit = QLineEdit()
-        lineEdit.setValidator(QDoubleValidator())
-
         # maybe need to cut precision
-        editLabel = EditLabel(lineEdit, str(pressTime))
-
-        lineEdit.returnPressed.connect(lambda: self.updateText(lineEdit, editLabel))
+        editLabel = EditLabel(str(pressTime))
+        editLabel.setValidator(QDoubleValidator())
 
         hLayout = QHBoxLayout()
+        self.addStepType(hLayout, stepType, data)
         hLayout.addWidget(editLabel)
-        hLayout.addWidget(lineEdit)
-        hLayout.addWidget(QKeySequenceEdit())
 
+        hLayout.addStretch()
+        container.setLayout(hLayout)
+        item.setSizeHint(container.sizeHint())
+        self.listWidget.addItem(item)
+        self.listWidget.setItemWidget(item, container)
 
+    def addStepType(self, layout, stepType, data):
+        #TODO input default data
+
+        # when change step type, just change image and reconnect onclick
+        stepButton = self.makeButton(stepImage(stepType))
+        layout.addWidget(stepButton)
+
+        typeContainer = QWidget()
+        containerLayout = QHBoxLayout()
+
+        #TODO make this block better if can
+        if stepType == StepEnum.MOUSE:
+            validator = QDoubleValidator()
+            xCoord = EditLabel(str(data[0]))
+            yCoord = EditLabel(str(data[1]))
+            xCoord.setValidator(validator)
+            yCoord.setValidator(validator)
+
+            containerLayout = QHBoxLayout()
+            containerLayout.addWidget(QLabel('('))
+            containerLayout.addWidget(xCoord)
+            containerLayout.addWidget(xCoord.getLineEdit())
+            containerLayout.addWidget(QLabel(', '))
+            containerLayout.addWidget(yCoord)
+            containerLayout.addWidget(yCoord.getLineEdit())
+            containerLayout.addWidget(QLabel(')'))
+
+        elif stepType == StepEnum.KEY:
+            containerLayout.addWidget(QKeySequenceEdit())
+        elif stepType == StepEnum.ACTIVE_WAIT:
+            containerLayout.addWidget(QLabel('Active Time'))
+        elif stepType == StepEnum.INACTIVE_WAIT:
+            containerLayout.addWidget(QLabel('Inactive Time'))
+
+        containerLayout.addStretch()
+        typeContainer.setLayout(containerLayout)
+        layout.addWidget(typeContainer)
+
+    def makeButton(self, image, name='', x=0, y=0, width=30, height=30):
+        button = QtWidgets.QPushButton(self.centralwidget)
+        button.setGeometry(QtCore.QRect(x, y, width, height))
+        button.setStyleSheet(image)
+        button.setText('')
+        if name:
+            button.setObjectName(name)
+        return button
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")

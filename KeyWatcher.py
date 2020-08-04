@@ -2,6 +2,7 @@ from pyHook import HookManager
 from pyHook import HookConstants
 from win32gui import PostQuitMessage
 from PyQt5.QtWidgets import QListWidgetItem
+from StepConstants import StepEnum
 
 class KeyWatcher():
 
@@ -25,7 +26,11 @@ class KeyWatcher():
 
     def on_keyboard_event(self, event):
         if self.window.recordButton.isChecked():
-            self.window.listWidget.addItem(QListWidgetItem(chr(event.KeyID)))
+            #self.window.listWidget.addItem(QListWidgetItem(chr(event.KeyID)))
+            self.window.listWidgetAddStep(StepEnum.ACTIVE_WAIT)
+            self.window.listWidgetAddStep(StepEnum.INACTIVE_WAIT)
+            self.window.listWidgetAddStep(StepEnum.MOUSE, (1, 2))
+            self.window.listWidgetAddStep(StepEnum.KEY)
         return True            
 
     def your_method(self):
