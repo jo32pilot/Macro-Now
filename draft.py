@@ -18,25 +18,24 @@ from DoubleClickWidgets import EditLabel, MacroWidget
 
 class Ui_MainWindow(object):
 
+    def updateText(self, lineEdit, editLabel):
+        new_text = lineEdit.text()
+        if new_text:
+            editLabel.text = new_text
+            editLabel.setText(new_text)
+        lineEdit.hide()
+        editLabel.show()
+
+
     def listWidgetAddEditLabel(self, text):
         item = QListWidgetItem()
         container = MacroWidget(self.listWidget)
-        #container.resize(100, 2000)
-        #container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         lineEdit = QLineEdit()
         editLabel = EditLabel(lineEdit, text)
         lineEdit.hide()
 
-        def updateText():
-            new_text = lineEdit.text()
-            if new_text:
-                editLabel.text = new_text
-                editLabel.setText(new_text)
-            lineEdit.hide()
-            editLabel.show()
-
-        lineEdit.returnPressed.connect(updateText)
+        lineEdit.returnPressed.connect(lambda: self.updateText(lineEdit, editLabel))
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
@@ -49,6 +48,24 @@ class Ui_MainWindow(object):
 
         self.listWidget.addItem(item)
         self.listWidget.setItemWidget(item, container)
+
+    def listWidgetAddStep(self, step, pressTime):
+        item = QListWidgetItem()
+        container = QWidget()
+
+        lineEdit = QLineEdit()
+        lineEdit.setValidator(QDoubleValidator())
+
+        # maybe need to cut precision
+        editLabel = EditLabel(lineEdit, str(pressTime))
+
+        lineEdit.returnPressed.connect(lambda: self.updateText(lineEdit, editLabel))
+
+        hLayout = QHBoxLayout()
+        hLayout.addWidget(editLabel)
+        hLayout.addWidget(lineEdit)
+        hLayout.addWidget(QKeySequenceEdit())
+
 
 
     def setupUi(self, MainWindow):
