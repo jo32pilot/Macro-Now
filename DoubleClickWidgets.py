@@ -1,6 +1,4 @@
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QLabel, QLineEdit, QWidget, QHBoxLayout, QLayout, QSizePolicy
+from PyQt5.QtWidgets import QLabel, QWidget
 
 class EditLabel(QLabel):
     def __init__(self, lineEdit, defaultText, parent=None):
@@ -13,4 +11,21 @@ class EditLabel(QLabel):
         self.hide()
         self.lineEdit.show()
         self.lineEdit.setFocus()
+
+class MacroWidget(QWidget):
+    def __init__(self, listWidget, parent=None):
+        """ 
+        
+        Args:
+            shortcut: Key to press to run macro
+            steps: Steps that the macro will simulate
+        
+        """
+        super().__init__(parent)
+        self.listWidget = listWidget
+
+    def mouseDoubleClickEvent(self, event):
+        print('double click macro widget')
+        self.listWidget.clear()
+
 

@@ -1,8 +1,9 @@
 from pyHook import HookManager
 from pyHook import HookConstants
 from win32gui import PostQuitMessage
+from PyQt5.QtWidgets import QListWidgetItem
 
-class KeyWatcher(object):
+class KeyWatcher():
 
     def __init__(self, window, currentTime, diffTime, totalTime):
         self.currentTime = currentTime
@@ -13,7 +14,7 @@ class KeyWatcher(object):
         self.hm.HookKeyboard()
         self.hm.HookMouse()
 
-        #self.hm.SubscribeKeyAll()
+        self.hm.SubscribeKeyAll(self.on_keyboard_event)
         #self.hm.SubscribeMouseAll()
 
         self.window = window
@@ -23,12 +24,9 @@ class KeyWatcher(object):
         return True
 
     def on_keyboard_event(self, event):
-        print(event.KeyID)
-        try:
-            if event.KeyID  == ord('E'):
-                self.your_method()
-        finally:
-            return True
+        if self.window.recordButton.isChecked():
+            self.window.listWidget.addItem(QListWidgetItem(chr(event.KeyID)))
+        return True            
 
     def your_method(self):
         self.new_wind = SubWindow()
@@ -37,3 +35,6 @@ class KeyWatcher(object):
     def shutdown(self):
         PostQuitMessage(0)
         self.hm.UnhookKeyboard()
+
+    def start_record_event(self):
+        pass

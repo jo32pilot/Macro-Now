@@ -9,18 +9,20 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import *
 from KeyWatcher import KeyWatcher
 from win32gui import PumpMessages
-#from DoubleClickWidgets import DCLabel
-from DoubleClickWidgets import EditLabel
+from DoubleClickWidgets import EditLabel, MacroWidget
 
 
 class Ui_MainWindow(object):
 
     def listWidgetAddEditLabel(self, text):
         item = QListWidgetItem()
-        container = QWidget()
+        container = MacroWidget(self.listWidget)
+        #container.resize(100, 2000)
+        #container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         lineEdit = QLineEdit()
         editLabel = EditLabel(lineEdit, text)
@@ -39,98 +41,94 @@ class Ui_MainWindow(object):
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
         hLayout.addWidget(lineEdit)
+        hLayout.addWidget(QKeySequenceEdit())
 
         hLayout.addStretch()
-        hLayout.setSizeConstraint(QLayout.SetFixedSize)
         container.setLayout(hLayout)  
         item.setSizeHint(container.sizeHint())    
 
         self.listWidget.addItem(item)
         self.listWidget.setItemWidget(item, container)
 
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(868, 412)
+        MainWindow.resize(988, 412)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.listWidget = QtWidgets.QListWidget(self.centralwidget)
-        self.listWidget.setGeometry(QtCore.QRect(50, 70, 761, 301))
+        self.listWidget.setGeometry(QtCore.QRect(50, 70, 881, 301))
         self.listWidget.setObjectName("listWidget")
 
         self.listWidgetAddEditLabel('Default1')
         self.listWidgetAddEditLabel('Default2')
 
-        '''
-        self.item = QListWidgetItem() 
-        self.container = QWidget()
-
-        self.lineEdit = QLineEdit()
-        self.lineEdit.hide()
-        self.lineEdit.returnPressed.connect(lambda: self.updateText())
-        self.editLabel = EditLabel(self.lineEdit, 'Default Text')
-
-        hLayout = QHBoxLayout()
-        hLayout.addWidget(self.editLabel)
-        hLayout.addWidget(self.lineEdit)
-
-        hLayout.addStretch()
-        hLayout.setSizeConstraint(QLayout.SetFixedSize)
-        self.container.setLayout(hLayout)  
-        self.item.setSizeHint(self.container.sizeHint())    
-
-        self.listWidget.addItem(self.item)
-        self.listWidget.setItemWidget(self.item, self.container)
-        '''
-
         self.curentTime = QtWidgets.QLCDNumber(self.centralwidget)
-        self.curentTime.setGeometry(QtCore.QRect(50, 30, 121, 23))
+        self.curentTime.setGeometry(QtCore.QRect(120, 30, 121, 23))
         self.curentTime.setObjectName("curentTime")
         self.diffTime = QtWidgets.QLCDNumber(self.centralwidget)
-        self.diffTime.setGeometry(QtCore.QRect(210, 30, 121, 23))
+        self.diffTime.setGeometry(QtCore.QRect(280, 30, 121, 23))
         self.diffTime.setObjectName("diffTime")
-        self.newButton = QtWidgets.QPushButton(self.centralwidget)
-        self.newButton.setGeometry(QtCore.QRect(530, 30, 30, 30))
-        self.newButton.setStyleSheet("image: url(:/images/images/plus.png);\n"
+        self.addButton = QtWidgets.QPushButton(self.centralwidget)
+        self.addButton.setGeometry(QtCore.QRect(650, 30, 30, 30))
+        self.addButton.setStyleSheet("image: url(:/images/images/plus.png);\n"
 "padding:3px;")
-        self.newButton.setText("")
-        self.newButton.setObjectName("newButton")
+        self.addButton.setText("")
+        self.addButton.setObjectName("addButton")
         self.deleteButton = QtWidgets.QPushButton(self.centralwidget)
-        self.deleteButton.setGeometry(QtCore.QRect(630, 30, 30, 30))
+        self.deleteButton.setGeometry(QtCore.QRect(750, 30, 30, 30))
         self.deleteButton.setStyleSheet("image: url(:/images/images/undo.png);\n"
 "padding: 4px;")
         self.deleteButton.setText("")
         self.deleteButton.setObjectName("deleteButton")
         self.undoButtone = QtWidgets.QPushButton(self.centralwidget)
-        self.undoButtone.setGeometry(QtCore.QRect(680, 30, 30, 30))
+        self.undoButtone.setGeometry(QtCore.QRect(800, 30, 30, 30))
         self.undoButtone.setStyleSheet("image: url(:/images/images/redo.png);\n"
 "padding: 4px;")
         self.undoButtone.setText("")
         self.undoButtone.setObjectName("undoButtone")
         self.configButton = QtWidgets.QPushButton(self.centralwidget)
-        self.configButton.setGeometry(QtCore.QRect(780, 30, 30, 30))
+        self.configButton.setGeometry(QtCore.QRect(900, 30, 30, 30))
         self.configButton.setStyleSheet("image: url(:/images/images/settings.png);\n"
 "padding: 3px;")
         self.configButton.setText("")
         self.configButton.setObjectName("configButton")
         self.saveButton = QtWidgets.QPushButton(self.centralwidget)
-        self.saveButton.setGeometry(QtCore.QRect(580, 30, 30, 30))
+        self.saveButton.setGeometry(QtCore.QRect(700, 30, 30, 30))
         self.saveButton.setStyleSheet("image: url(:/images/images/minus.png);\n"
 "padding: 4px;")
         self.saveButton.setText("")
         self.saveButton.setObjectName("saveButton")
         self.redoButton = QtWidgets.QPushButton(self.centralwidget)
-        self.redoButton.setGeometry(QtCore.QRect(730, 30, 30, 30))
+        self.redoButton.setGeometry(QtCore.QRect(850, 30, 30, 30))
         self.redoButton.setStyleSheet("image: url(:/images/images/save.png);\n"
 "padding: 4px;")
         self.redoButton.setText("")
         self.redoButton.setObjectName("redoButton")
         self.totalTime = QtWidgets.QLCDNumber(self.centralwidget)
-        self.totalTime.setGeometry(QtCore.QRect(370, 30, 121, 23))
+        self.totalTime.setGeometry(QtCore.QRect(440, 30, 121, 23))
         self.totalTime.setObjectName("totalTime")
+
+        self.recordButton = QtWidgets.QPushButton(self.centralwidget)
+        self.recordButton.setGeometry(QtCore.QRect(600, 30, 30, 30))
+        self.recordButton.setStyleSheet("padding:5px;\n"
+"image: url(:/images/images/record.png);")
+        self.recordButton.setText("")
+        self.recordButton.setObjectName("recordButton")
+        self.recordButton.setCheckable(True)
+
+        # will need to change this later
+        self.recordButton.clicked.connect(self.changeColor)
+
+        self.backButton = QtWidgets.QPushButton(self.centralwidget)
+        self.backButton.setGeometry(QtCore.QRect(50, 30, 30, 30))
+        self.backButton.setStyleSheet("padding:5px;\n"
+"image: url(:/images/images/back.png);")
+        self.backButton.setText("")
+        self.backButton.setObjectName("backButton")
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -138,15 +136,25 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))   
-    '''
-    def updateText(self):
-        new_text = self.lineEdit.text()
-        if new_text:
-            self.editLabel.text = new_text
-            self.editLabel.setText(new_text)
-        self.lineEdit.hide()
-        self.editLabel.show()
-    '''
+
+    def changeColor(self):
+        '''
+        # maybe change image to brighter red instead
+        
+        # if button is checked 
+        if self.recordButton.isChecked(): 
+  
+            # setting background color to light-blue 
+            self.recordButton.setStyleSheet("background-color : lightblue") 
+  
+        # if it is unchecked 
+        else: 
+  
+            # set background color back to light-grey 
+            self.recordButton.setStyleSheet("background-color : transparent") 
+        '''
+        pass
+
 import qtresources_rc
 
 
