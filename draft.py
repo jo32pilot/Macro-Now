@@ -20,6 +20,14 @@ from StepConstants import StepEnum, stepImage
 
 class Ui_MainWindow(object):
 
+    def _finalizeContainer(self, item, container, layout):
+        layout.addStretch()
+        container.setLayout(layout)  
+        item.setSizeHint(container.sizeHint())    
+
+        self.listWidget.addItem(item)
+        self.listWidget.setItemWidget(item, container)
+
     def listWidgetAddEditLabel(self, text):
         item = QListWidgetItem()
         container = MacroWidget(self.listWidget)
@@ -31,12 +39,7 @@ class Ui_MainWindow(object):
         hLayout.addWidget(editLabel.getLineEdit())
         hLayout.addWidget(QKeySequenceEdit())
 
-        hLayout.addStretch()
-        container.setLayout(hLayout)  
-        item.setSizeHint(container.sizeHint())    
-
-        self.listWidget.addItem(item)
-        self.listWidget.setItemWidget(item, container)
+        self._finalizeContainer(item, container, hLayout)
 
     #TODO maybe have class for list widget?
 
@@ -53,24 +56,25 @@ class Ui_MainWindow(object):
         hLayout.addWidget(editLabel)
         hLayout.addWidget(editLabel.getLineEdit())
 
-        hLayout.addStretch()
-        container.setLayout(hLayout)
-        item.setSizeHint(container.sizeHint())
-        self.listWidget.addItem(item)
-        self.listWidget.setItemWidget(item, container)
+        self._finalizeContainer(item, container, hLayout)
 
     def addStepType(self, layout, stepType, data):
         #TODO input default data
 
         # when change step type, just change image and reconnect onclick
         stepButton = self.makeButton(stepImage(stepType))
-        layout.addWidget(stepButton)
+        typeButtonLayout = QHBoxLayout()
+        typeButtonLayout.addWidget(stepButton)
+        stepButton.clicked.connect(
+                lambda: self._insertOptions(stepType, typeButtonLayout))
+
+        layout.addLayout(typeButtonLayout)
 
         typeContainer = QWidget()
         containerLayout = QHBoxLayout()
 
         #TODO make this block better if can
-        if stepType == StepEnum.MOUSE:
+        if stepType == StepEnum.MOUSE_LEFT or stepType == StepEnum.MOUSE_RIGHT:
             validator = QDoubleValidator()
             xCoord = EditLabel(str(data[0]))
             yCoord = EditLabel(str(data[1]))
@@ -97,11 +101,19 @@ class Ui_MainWindow(object):
         typeContainer.setLayout(containerLayout)
         layout.addWidget(typeContainer)
 
+    def _insertOptions(self, currType, layout):
+        for stepType in StepEnum:
+            if currType != stepType:
+                button = self.makeButton(stepImage(stepType))
+                layout.addWidget(button)
+        
+
     def makeButton(self, image, name='', x=0, y=0, width=30, height=30):
         button = QtWidgets.QPushButton(self.centralwidget)
         button.setGeometry(QtCore.QRect(x, y, width, height))
         button.setStyleSheet(image)
         button.setText('')
+        button.setMinimumSize(width, height)
         if name:
             button.setObjectName(name)
         return button
@@ -177,7 +189,7 @@ class Ui_MainWindow(object):
 
         self.backButton = QtWidgets.QPushButton(self.centralwidget)
         self.backButton.setGeometry(QtCore.QRect(50, 30, 30, 30))
-        self.backButton.setStyleSheet("padding:5px;\n"
+        self.backButton.setStyleSheet("padding:3px;\n"
 "image: url(:/images/images/back.png);")
         self.backButton.setText("")
         self.backButton.setObjectName("backButton")

@@ -6,4 +6,4 @@
 __pycache__/
 qtresources_rt
 ui_tests/
-*.qrc
+*.pdn

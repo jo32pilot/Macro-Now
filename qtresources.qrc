@@ -1,0 +1,18 @@
+<RCC>
+  <qresource prefix="/images">
+    <file>images/back.png</file>
+    <file>images/minus.png</file>
+    <file>images/record.png</file>
+    <file>images/plus.png</file>
+    <file>images/settings.png</file>
+    <file>images/save.png</file>
+    <file>images/undo.png</file>
+    <file>images/redo.png</file>
+    <file>images/active_wait.png</file>
+    <file>images/inactive_wait.png</file>
+    <file>images/keyboard.png</file>
+    <file>images/leftclick.png</file>
+    <file>images/rightclick.png</file>
+    <file>images/scroll.png</file>
+  </qresource>
+</RCC>
