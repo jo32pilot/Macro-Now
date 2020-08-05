@@ -51,6 +51,7 @@ class Ui_MainWindow(object):
         hLayout = QHBoxLayout()
         self.addStepType(hLayout, stepType, data)
         hLayout.addWidget(editLabel)
+        hLayout.addWidget(editLabel.getLineEdit())
 
         hLayout.addStretch()
         container.setLayout(hLayout)
