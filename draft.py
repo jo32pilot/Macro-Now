@@ -43,24 +43,33 @@ class Ui_MainWindow(object):
 
     #TODO maybe have class for list widget?
 
-    def listWidgetAddStep(self, stepType, data=None, pressTime=None):
+    def listWidgetAddStep(self, stepType, data=None, press=None, total=None):
         item = QListWidgetItem()
         container = QWidget()
 
         # maybe need to cut precision
-        editLabel = EditLabelLine(str(pressTime))
-        editLabel.setValidator(QDoubleValidator())
+        pressTime = EditLabelLine(str(press))
+        pressTime.setValidator(QDoubleValidator())
+        #pressTime.setMinimumWidth()
+        totalTime = EditLabelLine(str(total))
+        totalTime.setValidator(QDoubleValidator())
+        #totalTime.setMinimumWidth(100)
 
         hLayout = QHBoxLayout()
         self.addStepType(hLayout, stepType, data)
-        hLayout.addWidget(editLabel)
-        hLayout.addWidget(editLabel.getEditor())
+        hLayout.addWidget(pressTime)
+        hLayout.addWidget(pressTime.getEditor())
+        hLayout.addStretch()
+        hLayout.addWidget(totalTime)
+        hLayout.addWidget(totalTime.getEditor())
 
         self._finalizeContainer(item, container, hLayout)
 
     
     def _getValueWidget(self, stepType, data):
         #TODO for recording new mouse clicks / scrolls, start by context menu
+
+        # TODO move value / data to parent layout to make look better
 
         typeContainer = QWidget()
         containerLayout = QHBoxLayout()
@@ -95,13 +104,16 @@ class Ui_MainWindow(object):
             # placeholder to take space
             containerLayout.addWidget(QWidget())
 
-        containerLayout.addStretch()
         typeContainer.setLayout(containerLayout)
+        typeContainer.setMinimumWidth(100)
         return typeContainer
 
 
 
     def addStepType(self, layout, stepType, data):
+        #TODO make editlabel editors smaller because right now taking too much space
+        #TODO put cap on number that can be entered. see if can get monitor resolution
+
         #TODO input default data
 
         # when change step type, just change image and reconnect onclick
@@ -112,20 +124,25 @@ class Ui_MainWindow(object):
                 stepButton, typeButtonLayout, layout))
 
         layout.addLayout(typeButtonLayout)
-        layout.addWidget(QLabel(stepDescriptor(stepType)))
+        desc = QLabel(stepDescriptor(stepType))
+        #desc.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        desc.setMinimumWidth(100)
+        layout.addWidget(desc)
+        layout.addStretch()
         layout.addWidget(self._getValueWidget(stepType, data))
-        
-       # typeContainer = self._getValueWidget(stepType, data)
-       # layout.addWidget(typeContainer)
-   
+        layout.addStretch()
+
+    def _removeWidget(self, idx, layout):
+        toRemove = layout.takeAt(idx).widget()
+        layout.removeWidget(toRemove)
+        toRemove.setParent(None)
 
     def _removeButtons(self, amount, layout):
         for i in range(amount):
-            toRemove = layout.takeAt(1).widget()
-            layout.removeWidget(toRemove)
-            toRemove.setParent(None)
+            self._removeWidget(1, layout)
 
-    def _changeButton(self, newType, origButton, typeButtonLayout, parentLayout):
+    def _changeButton(self, newType, origButton, typeButtonLayout, 
+            parentLayout):
         self._removeButtons(len(StepEnum) - 1, typeButtonLayout)
         origButton.clicked.disconnect()
         newImage = stepImage(newType)
@@ -134,12 +151,26 @@ class Ui_MainWindow(object):
                 origButton, typeButtonLayout, parentLayout))
 
 
-    def _changeType(self, newType, origButton, typeButtonLayout, parentLayout):
-        # replace button image
-        # remove buttons (should be like 5?)
+    def _changeType(self, oldType, newType, origButton, typeButtonLayout, 
+            parentLayout):
+        # replace button image and event handler, and remove extra buttons
         self._changeButton(newType, origButton, typeButtonLayout, parentLayout)
 
-        # change widget at index 1 of layout
+        # change type descrption
+        parentLayout.itemAt(1).widget().setText(stepDescriptor(newType))
+
+        # change type data
+        oldIsClick = (oldType == StepEnum.MOUSE_LEFT 
+                or oldType == StepEnum.MOUSE_RIGHT)
+        newIsClick = (newType == StepEnum.MOUSE_LEFT 
+                or newType == StepEnum.MOUSE_RIGHT)
+
+        if not (oldIsClick and newIsClick):
+            data = (0, 0) if newIsClick else None
+            # index 2 is a spacer
+            self._removeWidget(3, parentLayout)
+            newWidget = self._getValueWidget(newType, data)
+            parentLayout.insertWidget(3, newWidget)
 
     def _insertOptions(self, currType, origButton, typeButtonLayout,
             parentLayout):
@@ -151,8 +182,8 @@ class Ui_MainWindow(object):
                 # don't know why I can't just pass in stepType into
                 # changeType directly instead of using a keyword arg
                 # in the lambda, but it won't work otherwise
-                event = lambda ch, stepType=stepType: self._changeType(stepType,
-                        origButton, typeButtonLayout, parentLayout)
+                event = lambda ch, stepType=stepType: self._changeType(currType,
+                        stepType, origButton, typeButtonLayout, parentLayout)
 
                 button.clicked.connect(event)
                 typeButtonLayout.addWidget(button)
