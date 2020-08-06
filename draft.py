@@ -65,8 +65,8 @@ class Ui_MainWindow(object):
         stepButton = self.makeButton(stepImage(stepType))
         typeButtonLayout = QHBoxLayout()
         typeButtonLayout.addWidget(stepButton)
-        stepButton.clicked.connect(
-                lambda: self._insertOptions(stepType, typeButtonLayout))
+        stepButton.clicked.connect(lambda: self._insertOptions(stepType, 
+                stepButton, typeButtonLayout, layout))
 
         layout.addLayout(typeButtonLayout)
 
@@ -100,12 +100,51 @@ class Ui_MainWindow(object):
         containerLayout.addStretch()
         typeContainer.setLayout(containerLayout)
         layout.addWidget(typeContainer)
+   
+    def _removeButtons(self, amount, layout):
+        for i in range(amount):
+            toRemove = layout.takeAt(1).widget()
+            layout.removeWidget(toRemove)
+            toRemove.setParent(None)
 
-    def _insertOptions(self, currType, layout):
+    def _changeButton(self, newType, origButton, typeButtonLayout, parentLayout):
+        self._removeButtons(len(StepEnum) - 1, typeButtonLayout)
+        origButton.clicked.disconnect()
+        newImage = stepImage(newType)
+        origButton.setStyleSheet(newImage)
+        origButton.clicked.connect(lambda: self._insertOptions(newType, 
+                origButton, typeButtonLayout, parentLayout))
+
+
+    def _changeType(self, newType, origButton, typeButtonLayout, parentLayout):
+        # replace button image
+        # remove buttons (should be like 5?)
+        self._changeButton(newType, origButton, typeButtonLayout, parentLayout)
+
+        # change widget at index 1 of layout
+
+    def _insertOptions(self, currType, origButton, typeButtonLayout,
+            parentLayout):
+
         for stepType in StepEnum:
             if currType != stepType:
                 button = self.makeButton(stepImage(stepType))
-                layout.addWidget(button)
+
+                # don't know why I can't just pass in stepType into
+                # changeType directly instead of using a keyword arg
+                # in the lambda, but it won't work otherwise
+                event = lambda ch, stepType=stepType: self._changeType(stepType,
+                        origButton, typeButtonLayout, parentLayout)
+
+                button.clicked.connect(event)
+                typeButtonLayout.addWidget(button)
+
+        # if same type is clicked, remove added buttons and reconnect 
+        # _insertOptions event
+        origButton.clicked.disconnect()
+        origButton.clicked.connect(lambda: self._changeButton(currType, 
+                origButton, typeButtonLayout, parentLayout))
+            
         
 
     def makeButton(self, image, name='', x=0, y=0, width=30, height=30):
