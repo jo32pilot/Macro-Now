@@ -28,7 +28,6 @@ class KeyWatcher():
         if self.window.recordButton.isChecked():
             #self.window.listWidget.addItem(QListWidgetItem(chr(event.KeyID)))
             self.window.listWidgetAddStep(StepEnum.ACTIVE_WAIT)
-            self.window.listWidgetAddStep(StepEnum.INACTIVE_WAIT)
             self.window.listWidgetAddStep(StepEnum.MOUSE_LEFT, (1, 2))
             self.window.listWidgetAddStep(StepEnum.KEY)
         return True            

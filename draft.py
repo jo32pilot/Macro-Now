@@ -14,8 +14,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator
 from KeyWatcher import KeyWatcher
 from win32gui import PumpMessages
-from DoubleClickWidgets import EditLabel, MacroWidget
-from StepConstants import StepEnum, stepImage
+from DoubleClickWidgets import EditLabelLine, EditLabelKeySequence, MacroWidget
+from StepConstants import StepEnum, stepImage, stepDescriptor
 
 
 class Ui_MainWindow(object):
@@ -32,11 +32,11 @@ class Ui_MainWindow(object):
         item = QListWidgetItem()
         container = MacroWidget(self.listWidget)
 
-        editLabel = EditLabel(text)
+        editLabel = EditLabelLine(text)
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
-        hLayout.addWidget(editLabel.getLineEdit())
+        hLayout.addWidget(editLabel.getEditor())
         hLayout.addWidget(QKeySequenceEdit())
 
         self._finalizeContainer(item, container, hLayout)
@@ -48,15 +48,58 @@ class Ui_MainWindow(object):
         container = QWidget()
 
         # maybe need to cut precision
-        editLabel = EditLabel(str(pressTime))
+        editLabel = EditLabelLine(str(pressTime))
         editLabel.setValidator(QDoubleValidator())
 
         hLayout = QHBoxLayout()
         self.addStepType(hLayout, stepType, data)
         hLayout.addWidget(editLabel)
-        hLayout.addWidget(editLabel.getLineEdit())
+        hLayout.addWidget(editLabel.getEditor())
 
         self._finalizeContainer(item, container, hLayout)
+
+    
+    def _getValueWidget(self, stepType, data):
+        #TODO for recording new mouse clicks / scrolls, start by context menu
+
+        typeContainer = QWidget()
+        containerLayout = QHBoxLayout()
+
+        if stepType == StepEnum.MOUSE_LEFT or stepType == StepEnum.MOUSE_RIGHT:
+            validator = QDoubleValidator()
+            xCoord = EditLabelLine(str(data[0]))
+            yCoord = EditLabelLine(str(data[1]))
+            xCoord.setValidator(validator)
+            yCoord.setValidator(validator)
+
+            containerLayout.addWidget(QLabel('('))
+            containerLayout.addWidget(xCoord)
+            containerLayout.addWidget(xCoord.getEditor())
+            containerLayout.addWidget(QLabel(', '))
+            containerLayout.addWidget(yCoord)
+            containerLayout.addWidget(yCoord.getEditor())
+            containerLayout.addWidget(QLabel(')'))
+
+        elif stepType == StepEnum.MOUSE_SCROLL:
+            yDir = EditLabelLine(str(data))
+            yDir.setValidator(QDoubleValidator())
+
+            containerLayout.addWidget(QLabel('Y: '))
+            containerLayout.addWidget(yDir)
+
+        elif stepType == StepEnum.KEY:
+            editLabelKS = EditLabelKeySequence('Key Here')
+            containerLayout.addWidget(editLabelKS)
+            containerLayout.addWidget(editLabelKS.getEditor())
+        elif stepType == StepEnum.ACTIVE_WAIT:
+            # placeholder to take space
+            containerLayout.addWidget(QWidget())
+
+        containerLayout.addStretch()
+        typeContainer.setLayout(containerLayout)
+        return typeContainer
+
+
 
     def addStepType(self, layout, stepType, data):
         #TODO input default data
@@ -69,38 +112,13 @@ class Ui_MainWindow(object):
                 stepButton, typeButtonLayout, layout))
 
         layout.addLayout(typeButtonLayout)
-
-        typeContainer = QWidget()
-        containerLayout = QHBoxLayout()
-
-        #TODO make this block better if can
-        if stepType == StepEnum.MOUSE_LEFT or stepType == StepEnum.MOUSE_RIGHT:
-            validator = QDoubleValidator()
-            xCoord = EditLabel(str(data[0]))
-            yCoord = EditLabel(str(data[1]))
-            xCoord.setValidator(validator)
-            yCoord.setValidator(validator)
-
-            containerLayout = QHBoxLayout()
-            containerLayout.addWidget(QLabel('('))
-            containerLayout.addWidget(xCoord)
-            containerLayout.addWidget(xCoord.getLineEdit())
-            containerLayout.addWidget(QLabel(', '))
-            containerLayout.addWidget(yCoord)
-            containerLayout.addWidget(yCoord.getLineEdit())
-            containerLayout.addWidget(QLabel(')'))
-
-        elif stepType == StepEnum.KEY:
-            containerLayout.addWidget(QKeySequenceEdit())
-        elif stepType == StepEnum.ACTIVE_WAIT:
-            containerLayout.addWidget(QLabel('Active Time'))
-        elif stepType == StepEnum.INACTIVE_WAIT:
-            containerLayout.addWidget(QLabel('Inactive Time'))
-
-        containerLayout.addStretch()
-        typeContainer.setLayout(containerLayout)
-        layout.addWidget(typeContainer)
+        layout.addWidget(QLabel(stepDescriptor(stepType)))
+        layout.addWidget(self._getValueWidget(stepType, data))
+        
+       # typeContainer = self._getValueWidget(stepType, data)
+       # layout.addWidget(typeContainer)
    
+
     def _removeButtons(self, amount, layout):
         for i in range(amount):
             toRemove = layout.takeAt(1).widget()
