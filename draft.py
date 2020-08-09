@@ -11,212 +11,22 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QDoubleValidator
 from KeyWatcher import KeyWatcher
 from win32gui import PumpMessages
-from DoubleClickWidgets import EditLabelLine, EditLabelKeySequence, MacroWidget
-from StepConstants import StepEnum, stepImage, stepDescriptor
+from KeyListWidget import KeyListWidget
 
 
 class Ui_MainWindow(object):
-
-    def _finalizeContainer(self, item, container, layout):
-        layout.addStretch()
-        container.setLayout(layout)  
-        item.setSizeHint(container.sizeHint())    
-
-        self.listWidget.addItem(item)
-        self.listWidget.setItemWidget(item, container)
-
-    def listWidgetAddEditLabel(self, text):
-        item = QListWidgetItem()
-        container = MacroWidget(self.listWidget)
-
-        editLabel = EditLabelLine(text)
-
-        hLayout = QHBoxLayout()
-        hLayout.addWidget(editLabel)
-        hLayout.addWidget(editLabel.getEditor())
-        hLayout.addWidget(QKeySequenceEdit())
-
-        self._finalizeContainer(item, container, hLayout)
-
-    #TODO maybe have class for list widget?
-
-    def listWidgetAddStep(self, stepType, data=None, press=None, total=None):
-        item = QListWidgetItem()
-        container = QWidget()
-
-        # maybe need to cut precision
-        pressTime = EditLabelLine(str(press))
-        pressTime.setValidator(QDoubleValidator())
-        #pressTime.setMinimumWidth()
-        totalTime = EditLabelLine(str(total))
-        totalTime.setValidator(QDoubleValidator())
-        #totalTime.setMinimumWidth(100)
-
-        hLayout = QHBoxLayout()
-        self.addStepType(hLayout, stepType, data)
-        hLayout.addWidget(pressTime)
-        hLayout.addWidget(pressTime.getEditor())
-        hLayout.addStretch()
-        hLayout.addWidget(totalTime)
-        hLayout.addWidget(totalTime.getEditor())
-
-        self._finalizeContainer(item, container, hLayout)
-
-    
-    def _getValueWidget(self, stepType, data):
-        #TODO for recording new mouse clicks / scrolls, start by context menu
-
-        # TODO move value / data to parent layout to make look better
-
-        typeContainer = QWidget()
-        containerLayout = QHBoxLayout()
-
-        if stepType == StepEnum.MOUSE_LEFT or stepType == StepEnum.MOUSE_RIGHT:
-            validator = QDoubleValidator()
-            xCoord = EditLabelLine(str(data[0]))
-            yCoord = EditLabelLine(str(data[1]))
-            xCoord.setValidator(validator)
-            yCoord.setValidator(validator)
-
-            containerLayout.addWidget(QLabel('('))
-            containerLayout.addWidget(xCoord)
-            containerLayout.addWidget(xCoord.getEditor())
-            containerLayout.addWidget(QLabel(', '))
-            containerLayout.addWidget(yCoord)
-            containerLayout.addWidget(yCoord.getEditor())
-            containerLayout.addWidget(QLabel(')'))
-
-        elif stepType == StepEnum.MOUSE_SCROLL:
-            yDir = EditLabelLine(str(data))
-            yDir.setValidator(QDoubleValidator())
-
-            containerLayout.addWidget(QLabel('Y: '))
-            containerLayout.addWidget(yDir)
-
-        elif stepType == StepEnum.KEY:
-            editLabelKS = EditLabelKeySequence('Key Here')
-            containerLayout.addWidget(editLabelKS)
-            containerLayout.addWidget(editLabelKS.getEditor())
-        elif stepType == StepEnum.ACTIVE_WAIT:
-            # placeholder to take space
-            containerLayout.addWidget(QWidget())
-
-        typeContainer.setLayout(containerLayout)
-        typeContainer.setMinimumWidth(100)
-        return typeContainer
-
-
-
-    def addStepType(self, layout, stepType, data):
-        #TODO make editlabel editors smaller because right now taking too much space
-        #TODO put cap on number that can be entered. see if can get monitor resolution
-
-        #TODO input default data
-
-        # when change step type, just change image and reconnect onclick
-        stepButton = self.makeButton(stepImage(stepType))
-        typeButtonLayout = QHBoxLayout()
-        typeButtonLayout.addWidget(stepButton)
-        stepButton.clicked.connect(lambda: self._insertOptions(stepType, 
-                stepButton, typeButtonLayout, layout))
-
-        layout.addLayout(typeButtonLayout)
-        desc = QLabel(stepDescriptor(stepType))
-        #desc.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        desc.setMinimumWidth(100)
-        layout.addWidget(desc)
-        layout.addStretch()
-        layout.addWidget(self._getValueWidget(stepType, data))
-        layout.addStretch()
-
-    def _removeWidget(self, idx, layout):
-        toRemove = layout.takeAt(idx).widget()
-        layout.removeWidget(toRemove)
-        toRemove.setParent(None)
-
-    def _removeButtons(self, amount, layout):
-        for i in range(amount):
-            self._removeWidget(1, layout)
-
-    def _changeButton(self, newType, origButton, typeButtonLayout, 
-            parentLayout):
-        self._removeButtons(len(StepEnum) - 1, typeButtonLayout)
-        origButton.clicked.disconnect()
-        newImage = stepImage(newType)
-        origButton.setStyleSheet(newImage)
-        origButton.clicked.connect(lambda: self._insertOptions(newType, 
-                origButton, typeButtonLayout, parentLayout))
-
-
-    def _changeType(self, oldType, newType, origButton, typeButtonLayout, 
-            parentLayout):
-        # replace button image and event handler, and remove extra buttons
-        self._changeButton(newType, origButton, typeButtonLayout, parentLayout)
-
-        # change type descrption
-        parentLayout.itemAt(1).widget().setText(stepDescriptor(newType))
-
-        # change type data
-        oldIsClick = (oldType == StepEnum.MOUSE_LEFT 
-                or oldType == StepEnum.MOUSE_RIGHT)
-        newIsClick = (newType == StepEnum.MOUSE_LEFT 
-                or newType == StepEnum.MOUSE_RIGHT)
-
-        if not (oldIsClick and newIsClick):
-            data = (0, 0) if newIsClick else None
-            # index 2 is a spacer
-            self._removeWidget(3, parentLayout)
-            newWidget = self._getValueWidget(newType, data)
-            parentLayout.insertWidget(3, newWidget)
-
-    def _insertOptions(self, currType, origButton, typeButtonLayout,
-            parentLayout):
-
-        for stepType in StepEnum:
-            if currType != stepType:
-                button = self.makeButton(stepImage(stepType))
-
-                # don't know why I can't just pass in stepType into
-                # changeType directly instead of using a keyword arg
-                # in the lambda, but it won't work otherwise
-                event = lambda ch, stepType=stepType: self._changeType(currType,
-                        stepType, origButton, typeButtonLayout, parentLayout)
-
-                button.clicked.connect(event)
-                typeButtonLayout.addWidget(button)
-
-        # if same type is clicked, remove added buttons and reconnect 
-        # _insertOptions event
-        origButton.clicked.disconnect()
-        origButton.clicked.connect(lambda: self._changeButton(currType, 
-                origButton, typeButtonLayout, parentLayout))
-            
-        
-
-    def makeButton(self, image, name='', x=0, y=0, width=30, height=30):
-        button = QtWidgets.QPushButton(self.centralwidget)
-        button.setGeometry(QtCore.QRect(x, y, width, height))
-        button.setStyleSheet(image)
-        button.setText('')
-        button.setMinimumSize(width, height)
-        if name:
-            button.setObjectName(name)
-        return button
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(988, 412)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.listWidget = QtWidgets.QListWidget(self.centralwidget)
+
+        self.listWidget = KeyListWidget(self.centralwidget)
         self.listWidget.setGeometry(QtCore.QRect(50, 70, 881, 301))
         self.listWidget.setObjectName("listWidget")
-
-        self.listWidgetAddEditLabel('Default1')
-        self.listWidgetAddEditLabel('Default2')
 
         self.curentTime = QtWidgets.QLCDNumber(self.centralwidget)
         self.curentTime.setGeometry(QtCore.QRect(120, 30, 121, 23))
@@ -272,9 +82,6 @@ class Ui_MainWindow(object):
         self.recordButton.setObjectName("recordButton")
         self.recordButton.setCheckable(True)
 
-        # will need to change this later
-        self.recordButton.clicked.connect(self.changeColor)
-
         self.backButton = QtWidgets.QPushButton(self.centralwidget)
         self.backButton.setGeometry(QtCore.QRect(50, 30, 30, 30))
         self.backButton.setStyleSheet("padding:3px;\n"
@@ -292,24 +99,6 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))   
 
-    def changeColor(self):
-        '''
-        # maybe change image to brighter red instead
-        
-        # if button is checked 
-        if self.recordButton.isChecked(): 
-  
-            # setting background color to light-blue 
-            self.recordButton.setStyleSheet("background-color : lightblue") 
-  
-        # if it is unchecked 
-        else: 
-  
-            # set background color back to light-grey 
-            self.recordButton.setStyleSheet("background-color : transparent") 
-        '''
-        pass
-
 import qtresources_rc
 
 
@@ -322,7 +111,7 @@ if __name__ == "__main__":
     MainWindow.show()
 
     #temp
-    watcher = KeyWatcher(ui, None, None, None)
+    watcher = KeyWatcher(ui.listWidget, None, None, None)
     PumpMessages()
 
     sys.exit(app.exec_())
