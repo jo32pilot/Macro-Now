@@ -9,6 +9,8 @@ class KeyListWidget(QListWidget):
 
     keyPress = pyqtSignal(object)
     keyRelease = pyqtSignal(object)
+    mousePress = pyqtSignal(float, float, object, bool)
+    mouseMove = pyqtSignal(float, float)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -28,6 +30,11 @@ class KeyListWidget(QListWidget):
         self._finalizeContainer(item, container, hLayout)
 
     def listWidgetAddStep(self, stepType, data=None, total=None):
+        '''
+        
+        Return: List of widgets that need to be editted in the key watcher.
+                The first element in the list needs to be the hold time widget.
+        '''
         item = QListWidgetItem()
         container = QWidget()
 
@@ -42,7 +49,7 @@ class KeyListWidget(QListWidget):
         #totalTime.setMinimumWidth(100)
 
         hLayout = QHBoxLayout()
-        self._addStepType(hLayout, stepType, data)
+        valueWidgets = self._addStepType(hLayout, stepType, data)
         hLayout.addWidget(pressTime)
         hLayout.addWidget(pressTime.getEditor())
         hLayout.addStretch()
@@ -50,7 +57,7 @@ class KeyListWidget(QListWidget):
         hLayout.addWidget(totalTime.getEditor())
 
         self._finalizeContainer(item, container, hLayout)
-        return pressTime
+        return [pressTime, *valueWidgets]
 
     def _makeButton(self, image, name='', x=0, y=0, width=30, height=30):
         button = QtWidgets.QPushButton(self.savedParent)
@@ -70,28 +77,49 @@ class KeyListWidget(QListWidget):
         self.addItem(item)
         self.setItemWidget(item, container)
 
+    def _makeCoordText(self,layout, x, y):
+            validator = QDoubleValidator()
+            xCoord = EditLabelLine(x)
+            yCoord = EditLabelLine(y)
+            xCoord.setValidator(validator)
+            yCoord.setValidator(validator)
+
+            layout.addWidget(QLabel('('))
+            layout.addWidget(xCoord)
+            layout.addWidget(xCoord.getEditor())
+            layout.addWidget(QLabel(', '))
+            layout.addWidget(yCoord)
+            layout.addWidget(yCoord.getEditor())
+            layout.addWidget(QLabel(')'))
+            return (xCoord, yCoord)
+
     def _getValueWidget(self, stepType, data):
-        #TODO for recording new mouse clicks / scrolls, start by context menu
+        '''
+
+        Return: List of widgets. The first widget should always be the 
+                widget that will added to the list item widget layout.
+                Subsequent widgets are those that need to be edited
+                in the key watcher
+        '''
+        # TODO for recording new mouse clicks / scrolls, start by context menu
 
         # TODO move value / data to parent layout to make look better
 
         typeContainer = QWidget()
+        returnWidgets = [typeContainer]
         containerLayout = QHBoxLayout()
 
         if stepType == StepEnum.MOUSE_LEFT or stepType == StepEnum.MOUSE_RIGHT:
-            validator = QDoubleValidator()
-            xCoord = EditLabelLine(str(data[0]))
-            yCoord = EditLabelLine(str(data[1]))
-            xCoord.setValidator(validator)
-            yCoord.setValidator(validator)
+            self._makeCoordText(containerLayout, str(data[0]), str(data[1]))
 
-            containerLayout.addWidget(QLabel('('))
-            containerLayout.addWidget(xCoord)
-            containerLayout.addWidget(xCoord.getEditor())
-            containerLayout.addWidget(QLabel(', '))
-            containerLayout.addWidget(yCoord)
-            containerLayout.addWidget(yCoord.getEditor())
-            containerLayout.addWidget(QLabel(')'))
+        elif stepType == StepEnum.MOUSE_MOVE:
+            self._makeCoordText(containerLayout, str(data[0][0]), 
+                    str(data[0][1]))
+            containerLayout.addWidget(QLabel(' -> '))
+            xCoord, yCoord = self._makeCoordText(containerLayout, 
+                    str(data[1][0]), str(data[1][1]))
+            returnWidgets.append(xCoord)
+            returnWidgets.append(yCoord)
 
         elif stepType == StepEnum.MOUSE_SCROLL:
             yDir = EditLabelLine(str(data))
@@ -111,7 +139,8 @@ class KeyListWidget(QListWidget):
 
         typeContainer.setLayout(containerLayout)
         typeContainer.setMinimumWidth(100)
-        return typeContainer
+
+        return returnWidgets
 
     def _addStepType(self, layout, stepType, data):
         #TODO make editlabel editors smaller because right now taking too much space
@@ -132,8 +161,12 @@ class KeyListWidget(QListWidget):
         desc.setMinimumWidth(100)
         layout.addWidget(desc)
         layout.addStretch()
-        layout.addWidget(self._getValueWidget(stepType, data))
+
+        valueWidgets = self._getValueWidget(stepType, data)
+        layout.addWidget(valueWidgets[0])
         layout.addStretch()
+
+        return valueWidgets[1:]
         
 
     def _removeWidget(self, idx, layout):
@@ -173,7 +206,7 @@ class KeyListWidget(QListWidget):
             data = (0, 0) if newIsClick else None
             # index 2 is a spacer
             self._removeWidget(3, parentLayout)
-            newWidget = self._getValueWidget(newType, data)
+            newWidget = self._getValueWidget(newType, data)[0]
             parentLayout.insertWidget(3, newWidget)
 
     def _insertOptions(self, currType, origButton, typeButtonLayout,

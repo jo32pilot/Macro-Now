@@ -14,5 +14,6 @@
     <file>images/leftclick.png</file>
     <file>images/rightclick.png</file>
     <file>images/scroll.png</file>
+    <file>images/move.png</file>
   </qresource>
 </RCC>

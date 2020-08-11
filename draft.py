@@ -111,7 +111,7 @@ if __name__ == "__main__":
     MainWindow.show()
 
     #temp
-    watcher = KeyWatcher(ui.listWidget, None, None, None)
+    watcher = KeyWatcher(ui.listWidget, None)
     PumpMessages()
 
     sys.exit(app.exec_())
