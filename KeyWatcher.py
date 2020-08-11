@@ -6,6 +6,10 @@ import time
 
 # maybe can turn this all into snake case?
 
+# TODO clean up, put each type in own class
+
+# TODO for mouse move and scroll only change time for time that user moves
+
 class KeyWatcher():
 
     def __init__(self, listWidget, totalTime):
@@ -17,6 +21,7 @@ class KeyWatcher():
         self.listWidget.keyRelease.connect(self.onRelease)
         self.listWidget.mousePress.connect(self.onClick)
         self.listWidget.mouseMove.connect(self.onMouseMove)
+        self.listWidget.mouseScroll.connect(self.onScroll)
 
         self.updater = Thread()
         self.lock = Lock()
@@ -30,10 +35,17 @@ class KeyWatcher():
         self.endPosWidget = None
         self.moving = False
 
+        self.yOffset = 0
+        self.scrollDeltaStart = 0
+        self.scrolling = False
+        self.scrollStopDelta = 0
+        self.scrollPosWidget = None
+
         self.keyboard = keyboard.Listener(on_press=self.onPressEmit, 
                 on_release=self.onReleaseEmit)
         self.mouse = mouse.Listener(on_click=self.onClickEmit,
-                on_move=self.onMouseMoveEmit)
+                on_move=self.onMouseMoveEmit,
+                on_scroll=self.onScrollEmit)
 
         self.keyboard.start()
         self.mouse.start()
@@ -54,6 +66,9 @@ class KeyWatcher():
 
     def onMouseMoveEmit(self, x, y):
         self.listWidget.mouseMove.emit(x, y)
+
+    def onScrollEmit(self, x, y, dx, dy):
+        self.listWidget.mouseScroll.emit(x, y, dx, dy)
 
     def onMouseMove(self, x, y):
         if StepEnum.MOUSE_MOVE not in self.keysDown:
@@ -111,6 +126,35 @@ class KeyWatcher():
         else:
             self._dictDel(button)
 
+    def onScroll(self, x, y, dx, dy):
+        if StepEnum.MOUSE_SCROLL not in self.keysDown:
+            valueWidgets = self.listWidget.listWidgetAddStep(
+                    StepEnum.MOUSE_SCROLL, str(dy))
+            press, self.scrollPosWidget = valueWidgets[0], valueWidgets[1]
+            self._dictAdd(StepEnum.MOUSE_SCROLL, (press, time.time()))
+            self.startUpdater()
+        else:
+            self.yOffset += dy
+            self.scrollDeltaStart = time.time()
+            self.scrolling = True
+
+
+    def _updateScroll(self):
+
+        # make configurable
+        if self.scrollStopDelta >= 1 and self.scrollPosWidget != None:
+            self.yOffset = 0
+            self.scrollStopDelta = 0
+            self._dictDel(StepEnum.MOUSE_SCROLL)
+            self.scrollPosWidget = None
+        elif not self.scrolling:
+            self.scrollStopDelta = time.time() - self.scrollDeltaStart
+        elif self.scrolling:
+            self.scrollPosWidget.setText(f'Y: {self.yOffset}')
+            timeTup = self.keysDown[StepEnum.MOUSE_SCROLL]
+            timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
+            self.scrolling = False
+            
 
     def startUpdater(self):
         if not self.updater.is_alive():
@@ -138,12 +182,14 @@ class KeyWatcher():
     @_synchronize
     def _updateTime(self):
         for key, timeTup in self.keysDown.items():
-            if not key == StepEnum.MOUSE_MOVE:
+            if not (key == StepEnum.MOUSE_MOVE or key == StepEnum.MOUSE_SCROLL):
                 timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
 
 
     def update(self):
         while len(self.keysDown) != 0:
+            if StepEnum.MOUSE_SCROLL in self.keysDown:
+                self._updateScroll()
             if StepEnum.MOUSE_MOVE in self.keysDown:
                 self._updateMove()
             self._updateTime()

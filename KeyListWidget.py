@@ -11,6 +11,7 @@ class KeyListWidget(QListWidget):
     keyRelease = pyqtSignal(object)
     mousePress = pyqtSignal(float, float, object, bool)
     mouseMove = pyqtSignal(float, float)
+    mouseScroll = pyqtSignal(float, float, float, float)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -125,7 +126,10 @@ class KeyListWidget(QListWidget):
             yDir = EditLabelLine(str(data))
             yDir.setValidator(QDoubleValidator())
 
-            containerLayout.addWidget(QLabel('Y: '))
+            scrollWidget = QLabel(f'Y: {data}')
+            returnWidgets.append(scrollWidget)
+
+            containerLayout.addWidget(scrollWidget)
             containerLayout.addWidget(yDir)
 
         elif stepType == StepEnum.KEY:
@@ -145,8 +149,6 @@ class KeyListWidget(QListWidget):
     def _addStepType(self, layout, stepType, data):
         #TODO make editlabel editors smaller because right now taking too much space
         #TODO put cap on number that can be entered. see if can get monitor resolution
-
-        #TODO input default data
 
         # when change step type, just change image and reconnect onclick
         stepButton = self._makeButton(stepImage(stepType))
