@@ -22,9 +22,11 @@ class KeyWatcher():
         self.listWidget.mousePress.connect(self.onClick)
         self.listWidget.mouseMove.connect(self.onMouseMove)
         self.listWidget.mouseScroll.connect(self.onScroll)
+        self.listWidget.wait.connect(self.onWait)
 
         self.updater = Thread()
         self.lock = Lock()
+        self.startUpdater()
 
         self.keyController = keyboard.Controller()
         self.mouseController = mouse.Controller()
@@ -40,6 +42,7 @@ class KeyWatcher():
         self.scrolling = False
         self.scrollStopDelta = 0
         self.scrollPosWidget = None
+
 
         self.keyboard = keyboard.Listener(on_press=self.onPressEmit, 
                 on_release=self.onReleaseEmit)
@@ -70,17 +73,18 @@ class KeyWatcher():
     def onScrollEmit(self, x, y, dx, dy):
         self.listWidget.mouseScroll.emit(x, y, dx, dy)
 
+    def onWaitEmit(self):
+        self.listWidget.wait.emit()
+
     def onMouseMove(self, x, y):
         if StepEnum.MOUSE_MOVE not in self.keysDown:
             valueWidgets = self.listWidget.listWidgetAddStep(
                     StepEnum.MOUSE_MOVE, [self.pos, (x, y)])
 
-            press, endLabel = valueWidgets[0], valueWidgets[1:]
+            press, self.endPosWidget = valueWidgets[0], valueWidgets[1:]
             self.stopDeltaStart = time.time()
 
             self._dictAdd(StepEnum.MOUSE_MOVE, (press, time.time()))
-            self.endPosWidget = endLabel
-            self.startUpdater()
         else:
             self.pos = (x, y)
             self.stopDeltaStart = time.time()
@@ -110,7 +114,6 @@ class KeyWatcher():
             # set start time
             press = self.listWidget.listWidgetAddStep(StepEnum.KEY, str(key))[0]
             self._dictAdd(key, (press, time.time()))
-            self.startUpdater()
 
 
     def onRelease(self, key):
@@ -122,7 +125,6 @@ class KeyWatcher():
         if pressed:
             press = self.listWidget.listWidgetAddStep(stepType, (x, y))[0]
             self._dictAdd(button, (press, time.time()))
-            self.startUpdater()
         else:
             self._dictDel(button)
 
@@ -131,16 +133,24 @@ class KeyWatcher():
             valueWidgets = self.listWidget.listWidgetAddStep(
                     StepEnum.MOUSE_SCROLL, str(dy))
             press, self.scrollPosWidget = valueWidgets[0], valueWidgets[1]
+            self.scrollDeltaStart = time.time()
             self._dictAdd(StepEnum.MOUSE_SCROLL, (press, time.time()))
-            self.startUpdater()
         else:
             self.yOffset += dy
             self.scrollDeltaStart = time.time()
             self.scrolling = True
 
+    def onWait(self):
+        # TODO might need to sync this
+        if len(self.keysDown) == 0:
+            press = self.listWidget.listWidgetAddStep(
+                    StepEnum.ACTIVE_WAIT, None)[0]
+            self._dictAdd(StepEnum.ACTIVE_WAIT, (press, time.time()))
+        elif StepEnum.ACTIVE_WAIT in self.keysDown and len(self.keysDown) > 1:
+            self._dictDel(StepEnum.ACTIVE_WAIT)
+
 
     def _updateScroll(self):
-
         # make configurable
         if self.scrollStopDelta >= 1 and self.scrollPosWidget != None:
             self.yOffset = 0
@@ -187,13 +197,14 @@ class KeyWatcher():
 
 
     def update(self):
-        while len(self.keysDown) != 0:
+        while True:
             if StepEnum.MOUSE_SCROLL in self.keysDown:
                 self._updateScroll()
             if StepEnum.MOUSE_MOVE in self.keysDown:
                 self._updateMove()
+            self.onWaitEmit()
             self._updateTime()
-            time.sleep(.05)
+            time.sleep(.1)
 
 
     def shutdown(self):
