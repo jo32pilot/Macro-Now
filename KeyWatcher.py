@@ -78,10 +78,11 @@ class KeyWatcher():
 
     def onMouseMove(self, x, y):
         if StepEnum.MOUSE_MOVE not in self.keysDown:
-            valueWidgets = self.listWidget.listWidgetAddStep(
+            container = self.listWidget.listWidgetAddStep(
                     StepEnum.MOUSE_MOVE, [self.pos, (x, y)])
 
-            press, self.endPosWidget = valueWidgets[0], valueWidgets[1:]
+            press = container.getPress()
+            self.endPosWidget = container.getEditable()
             self.stopDeltaStart = time.time()
 
             self._dictAdd(StepEnum.MOUSE_MOVE, (press, time.time()))
@@ -112,7 +113,8 @@ class KeyWatcher():
         if key not in self.keysDown:
             # when start recording, set self.currentTime to 0 and 
             # set start time
-            press = self.listWidget.listWidgetAddStep(StepEnum.KEY, str(key))[0]
+            press = self.listWidget.listWidgetAddStep(
+                    StepEnum.KEY, str(key)).getPress()
             self._dictAdd(key, (press, time.time()))
 
 
@@ -123,16 +125,18 @@ class KeyWatcher():
         stepType = StepEnum.MOUSE_LEFT if mouse.Button.left else \
                 StepEnum.MOUSE_RIGHT
         if pressed:
-            press = self.listWidget.listWidgetAddStep(stepType, (x, y))[0]
+            press = self.listWidget.listWidgetAddStep(
+                    stepType, (x, y)).getPress()
             self._dictAdd(button, (press, time.time()))
         else:
             self._dictDel(button)
 
     def onScroll(self, x, y, dx, dy):
         if StepEnum.MOUSE_SCROLL not in self.keysDown:
-            valueWidgets = self.listWidget.listWidgetAddStep(
+            container = self.listWidget.listWidgetAddStep(
                     StepEnum.MOUSE_SCROLL, str(dy))
-            press, self.scrollPosWidget = valueWidgets[0], valueWidgets[1]
+            press = container.getPress()
+            self.scrollPosWidget = container.getEditable()
             self.scrollDeltaStart = time.time()
             self._dictAdd(StepEnum.MOUSE_SCROLL, (press, time.time()))
         else:
@@ -144,7 +148,7 @@ class KeyWatcher():
         # TODO might need to sync this
         if len(self.keysDown) == 0:
             press = self.listWidget.listWidgetAddStep(
-                    StepEnum.ACTIVE_WAIT, None)[0]
+                    StepEnum.ACTIVE_WAIT, None).getPress()
             self._dictAdd(StepEnum.ACTIVE_WAIT, (press, time.time()))
         elif StepEnum.ACTIVE_WAIT in self.keysDown and len(self.keysDown) > 1:
             self._dictDel(StepEnum.ACTIVE_WAIT)
