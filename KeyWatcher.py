@@ -31,19 +31,6 @@ class KeyWatcher():
         self.keyController = keyboard.Controller()
         self.mouseController = mouse.Controller()
 
-        self.pos = self.mouseController.position
-        self.moveStopDelta = 0
-        self.stopDeltaStart = 0
-        self.endPosWidget = None
-        self.moving = False
-
-        self.yOffset = 0
-        self.scrollDeltaStart = 0
-        self.scrolling = False
-        self.scrollStopDelta = 0
-        self.scrollPosWidget = None
-
-
         self.keyboard = keyboard.Listener(on_press=self.onPressEmit, 
                 on_release=self.onReleaseEmit)
         self.mouse = mouse.Listener(on_click=self.onClickEmit,
@@ -76,48 +63,6 @@ class KeyWatcher():
     def onWaitEmit(self):
         self.listWidget.wait.emit()
 
-    def onMouseMove(self, x, y):
-        if StepEnum.MOUSE_MOVE not in self.keysDown:
-            container = self.listWidget.listWidgetAddStep(
-                    StepEnum.MOUSE_MOVE, [self.pos, (x, y)])
-
-            press = container.getPress()
-            self.endPosWidget = container.getEditable()
-            self.stopDeltaStart = time.time()
-
-            self._dictAdd(StepEnum.MOUSE_MOVE, (press, time.time()))
-        else:
-            self.pos = (x, y)
-            self.stopDeltaStart = time.time()
-            self.moving = True
-
-    def _updateMove(self):
-        x, y = self.pos
-
-        # TODO make the threshold configurable
-        if self.moveStopDelta >= 1 and self.endPosWidget != None:
-            self.moveStopDelta = 0
-            self._dictDel(StepEnum.MOUSE_MOVE)
-            self.endPosWidget = None
-        elif not self.moving:
-            self.moveStopDelta = time.time() - self.stopDeltaStart
-        elif self.moving:
-            self.endPosWidget[0].setText(str(x))
-            self.endPosWidget[1].setText(str(y))
-
-            timeTup = self.keysDown[StepEnum.MOUSE_MOVE]
-            timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
-            self.moving = False
-
-    def onPress(self, key):
-        if key not in self.keysDown:
-            # when start recording, set self.currentTime to 0 and 
-            # set start time
-            press = self.listWidget.listWidgetAddStep(
-                    StepEnum.KEY, str(key)).getPress()
-            self._dictAdd(key, (press, time.time()))
-
-
     def onRelease(self, key):
         self._dictDel(key)
 
@@ -131,19 +76,6 @@ class KeyWatcher():
         else:
             self._dictDel(button)
 
-    def onScroll(self, x, y, dx, dy):
-        if StepEnum.MOUSE_SCROLL not in self.keysDown:
-            container = self.listWidget.listWidgetAddStep(
-                    StepEnum.MOUSE_SCROLL, str(dy))
-            press = container.getPress()
-            self.scrollPosWidget = container.getEditable()
-            self.scrollDeltaStart = time.time()
-            self._dictAdd(StepEnum.MOUSE_SCROLL, (press, time.time()))
-        else:
-            self.yOffset += dy
-            self.scrollDeltaStart = time.time()
-            self.scrolling = True
-
     def onWait(self):
         # TODO might need to sync this
         if len(self.keysDown) == 0:
@@ -154,51 +86,16 @@ class KeyWatcher():
             self._dictDel(StepEnum.ACTIVE_WAIT)
 
 
-    def _updateScroll(self):
-        # make configurable
-        if self.scrollStopDelta >= 1 and self.scrollPosWidget != None:
-            self.yOffset = 0
-            self.scrollStopDelta = 0
-            self._dictDel(StepEnum.MOUSE_SCROLL)
-            self.scrollPosWidget = None
-        elif not self.scrolling:
-            self.scrollStopDelta = time.time() - self.scrollDeltaStart
-        elif self.scrolling:
-            self.scrollPosWidget.setText(f'Y: {self.yOffset}')
-            timeTup = self.keysDown[StepEnum.MOUSE_SCROLL]
-            timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
-            self.scrolling = False
-            
-
     def startUpdater(self):
         if not self.updater.is_alive():
             self.updater = Thread(target=self.update)
             self.updater.start()
 
-    def _synchronize(func):
-        def sync_function(self, *args):
-            self.lock.acquire()
-            func(self, *args)
-            self.lock.release()
-        return sync_function
-
-    @_synchronize
-    def _dictAdd(self, key, val):
-        self.keysDown[key] = val
-
-    @_synchronize
-    def _dictDel(self, key):
-        timeTup = self.keysDown.get(key, None)
-        if timeTup != None:
-            timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
-            del self.keysDown[key]
-
-    @_synchronize
+    @synchronize(self.lock)
     def _updateTime(self):
         for key, timeTup in self.keysDown.items():
             if not (key == StepEnum.MOUSE_MOVE or key == StepEnum.MOUSE_SCROLL):
                 timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
-
 
     def update(self):
         while True:
@@ -211,9 +108,7 @@ class KeyWatcher():
             time.sleep(.1)
 
 
+    #TODO do I still even need this?
     def shutdown(self):
         PostQuitMessage(0)
         self.hm.UnhookKeyboard()
-
-    def start_record_event(self):
-        pass

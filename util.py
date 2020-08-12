@@ -11,3 +11,10 @@ def makeButton(parent, image, name='', x=0, y=0, width=30, height=30):
         button.setObjectName(name)
     return button
 
+def synchronize(func, lock):
+    def sync_function(self, *args):
+        lock.acquire()
+        func(self, *args)
+        lock.release()
+    return sync_function
+
