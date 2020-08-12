@@ -1,4 +1,7 @@
-
+from StepConstants import StepEnum
+from util import synchronize
+from pynput import mouse
+import time
 
 class StepEvent():
     def __init__(self, listWidget, keysDown, lock):
@@ -6,11 +9,11 @@ class StepEvent():
         self.keysDown = keysDown
         self.lock = lock
 
-    @synchronize(self.lock)
+    @synchronize
     def _dictAdd(self, key, val):
         self.keysDown[key] = val
 
-    @synchronize(self.lock)
+    @synchronize
     def _dictDel(self, key):
         timeTup = self.keysDown.get(key, None)
         if timeTup != None:
@@ -18,8 +21,8 @@ class StepEvent():
             del self.keysDown[key]
 
 
-class PressEvent(StepEvent):
-    def event(self, key):
+class KeyboardEvent(StepEvent):
+    def onPress(self, key):
         if key not in self.keysDown:
             # when start recording, set self.currentTime to 0 and 
             # set start time
@@ -27,48 +30,88 @@ class PressEvent(StepEvent):
                     StepEnum.KEY, str(key)).getPress()
             self._dictAdd(key, (press, time.time()))
 
+    def onRelease(self, key):
+        self._dictDel(key)
 
+class ClickEvent(StepEvent):
+    def onClick(self, x, y, button, pressed):
+        stepType = StepEnum.MOUSE_LEFT if button == mouse.Button.left else \
+                StepEnum.MOUSE_RIGHT
+        if pressed:
+            press = self.listWidget.listWidgetAddStep(
+                    stepType, (x, y)).getPress()
+            self._dictAdd(button, (press, time.time()))
+        else:
+            self._dictDel(button)
+
+class WaitEvent(StepEvent):
+    def onWait(self):
+        # TODO might need to sync this
+        if len(self.keysDown) == 0:
+            press = self.listWidget.listWidgetAddStep(
+                    StepEnum.ACTIVE_WAIT, None).getPress()
+            self._dictAdd(StepEnum.ACTIVE_WAIT, (press, time.time()))
+        elif StepEnum.ACTIVE_WAIT in self.keysDown and len(self.keysDown) > 1:
+            self._dictDel(StepEnum.ACTIVE_WAIT)
 
 class ReleaselessEvent(StepEvent):
-    def __init__(self, data, listWidget, keysDown):
-        super().__init__(listWidget, keysDown)
+    def __init__(self, data, listWidget, keysDown, lock):
+        super().__init__(listWidget, keysDown, lock)
         self.data = data
         self.stopStart = 0
         self.stopDelta = 0
-        self.widget = None
+        self.endPosWidget = None
         self.check = False
 
-    def onEvent(self, stepType, data):
+    def _onEvent(self, stepType, data, increment=False):
         if stepType not in self.keysDown:
-            container = listWidget.listWidgetAddStep(
-                    stepType, [self.data, initial])
+            container = self.listWidget.listWidgetAddStep(
+                    stepType, [self.data, data])
 
             press = container.getPress()
             self.endPosWidget = container.getEditable()
-            self.stopDelta = time.time()
+            self.stopStart = time.time()
 
             self._dictAdd(stepType, (press, time.time()))
         else:
-            self.data = data
+            if increment:
+                self.data += data
+            else:
+                self.data = data
             self.stopStart = time.time()
             self.check = True
 
-    def _update(self, stepType, updateFunc, resetFunc=lambda: pass):
+    def _update(self, stepType, updateFunc, reset=False):
         # TODO make configurable
         if self.stopDelta >= 1 and self.endPosWidget != None:
             self.stopDelta = 0
-            resetFunc()
+            if reset:
+                self.data = 0
             self._dictDel(stepType)
             self.endPosWidget = None
-        elif not self.scrolling:
+        elif not self.check:
             self.stopDelta = time.time() - self.stopStart
         elif self.check:
-            updateFunc(self)
+            updateFunc()
             timeTup = self.keysDown[stepType]
             timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
             self.check = False
 
-class MoveEvent(ReleaselessEvent)
+class ScrollEvent(ReleaselessEvent):
+    def onScroll(self, x, y, dx, dy):
+        self._onEvent(StepEnum.MOUSE_SCROLL, dy, increment=True)
+
+    def _updateText(self):
+        self.endPosWidget.setText(f'Y: {self.data}')
+
+    def update(self):
+        self._update(StepEnum.MOUSE_SCROLL, self._updateText, reset=True)
+
+class MoveEvent(ReleaselessEvent):
+    def onMove(self, x, y):
+        coords = (x, y)
+        self._onEvent(StepEnum.MOUSE_MOVE, coords)
+
     def _updateText(self):
         x, y = self.data
         self.endPosWidget[0].setText(str(x))
@@ -77,12 +120,3 @@ class MoveEvent(ReleaselessEvent)
     def update(self):
         self._update(StepEnum.MOUSE_MOVE, self._updateText)
     
-
-class ScrollEvent(ReleaselessEvent):
-    def _updateText(self):
-        self.endPosWidget.setText(f'Y: {self.data}')
-
-    def update(self):
-        self._update(StepEnum.MOUSE_SCROLL, 
-                self._updateText, lambda: self.data = 0)
-

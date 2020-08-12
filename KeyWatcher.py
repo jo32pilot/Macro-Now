@@ -1,12 +1,13 @@
+from StepEvents import KeyboardEvent, ClickEvent, WaitEvent, ScrollEvent, \
+        MoveEvent
 from win32gui import PostQuitMessage
 from StepConstants import StepEnum
 from pynput import mouse, keyboard
 from threading import Thread, Lock
+from util import synchronize
 import time
 
 # maybe can turn this all into snake case?
-
-# TODO clean up, put each type in own class
 
 # TODO for mouse move and scroll only change time for time that user moves
 
@@ -16,20 +17,27 @@ class KeyWatcher():
         self.listWidget = listWidget
         self.totalTime = totalTime
         self.keysDown = dict()
-
-        self.listWidget.keyPress.connect(self.onPress)
-        self.listWidget.keyRelease.connect(self.onRelease)
-        self.listWidget.mousePress.connect(self.onClick)
-        self.listWidget.mouseMove.connect(self.onMouseMove)
-        self.listWidget.mouseScroll.connect(self.onScroll)
-        self.listWidget.wait.connect(self.onWait)
-
-        self.updater = Thread()
         self.lock = Lock()
-        self.startUpdater()
 
         self.keyController = keyboard.Controller()
         self.mouseController = mouse.Controller()
+
+        self.keyboardEvent = KeyboardEvent(listWidget, self.keysDown, self.lock)
+        self.clickEvent = ClickEvent(listWidget, self.keysDown, self.lock)
+        self.waitEvent = WaitEvent(listWidget, self.keysDown, self.lock)
+        self.scrollEvent = ScrollEvent(0, listWidget, self.keysDown, self.lock)
+        self.moveEvent = MoveEvent(self.mouseController.position, listWidget, 
+                self.keysDown, self.lock)
+
+        self.listWidget.keyPress.connect(self.keyboardEvent.onPress)
+        self.listWidget.keyRelease.connect(self.keyboardEvent.onRelease)
+        self.listWidget.mousePress.connect(self.clickEvent.onClick)
+        self.listWidget.wait.connect(self.waitEvent.onWait)
+        self.listWidget.mouseScroll.connect(self.scrollEvent.onScroll)
+        self.listWidget.mouseMove.connect(self.moveEvent.onMove)
+
+        self.updater = Thread()
+        self.startUpdater()
 
         self.keyboard = keyboard.Listener(on_press=self.onPressEmit, 
                 on_release=self.onReleaseEmit)
@@ -54,44 +62,21 @@ class KeyWatcher():
     def onClickEmit(self, x, y, button, pressed):
         self.listWidget.mousePress.emit(x, y, button, pressed)
 
-    def onMouseMoveEmit(self, x, y):
-        self.listWidget.mouseMove.emit(x, y)
+    def onWaitEmit(self):
+        self.listWidget.wait.emit()
 
     def onScrollEmit(self, x, y, dx, dy):
         self.listWidget.mouseScroll.emit(x, y, dx, dy)
 
-    def onWaitEmit(self):
-        self.listWidget.wait.emit()
-
-    def onRelease(self, key):
-        self._dictDel(key)
-
-    def onClick(self, x, y, button, pressed):
-        stepType = StepEnum.MOUSE_LEFT if mouse.Button.left else \
-                StepEnum.MOUSE_RIGHT
-        if pressed:
-            press = self.listWidget.listWidgetAddStep(
-                    stepType, (x, y)).getPress()
-            self._dictAdd(button, (press, time.time()))
-        else:
-            self._dictDel(button)
-
-    def onWait(self):
-        # TODO might need to sync this
-        if len(self.keysDown) == 0:
-            press = self.listWidget.listWidgetAddStep(
-                    StepEnum.ACTIVE_WAIT, None).getPress()
-            self._dictAdd(StepEnum.ACTIVE_WAIT, (press, time.time()))
-        elif StepEnum.ACTIVE_WAIT in self.keysDown and len(self.keysDown) > 1:
-            self._dictDel(StepEnum.ACTIVE_WAIT)
-
+    def onMouseMoveEmit(self, x, y):
+        self.listWidget.mouseMove.emit(x, y)
 
     def startUpdater(self):
         if not self.updater.is_alive():
             self.updater = Thread(target=self.update)
             self.updater.start()
 
-    @synchronize(self.lock)
+    @synchronize
     def _updateTime(self):
         for key, timeTup in self.keysDown.items():
             if not (key == StepEnum.MOUSE_MOVE or key == StepEnum.MOUSE_SCROLL):
@@ -100,15 +85,15 @@ class KeyWatcher():
     def update(self):
         while True:
             if StepEnum.MOUSE_SCROLL in self.keysDown:
-                self._updateScroll()
+                self.scrollEvent.update()
             if StepEnum.MOUSE_MOVE in self.keysDown:
-                self._updateMove()
+                self.moveEvent.update()
             self.onWaitEmit()
             self._updateTime()
             time.sleep(.1)
-
 
     #TODO do I still even need this?
     def shutdown(self):
         PostQuitMessage(0)
         self.hm.UnhookKeyboard()
+
