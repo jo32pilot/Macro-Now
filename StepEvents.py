@@ -57,6 +57,9 @@ class WaitEvent(StepEvent):
 class ReleaselessEvent(StepEvent):
     def __init__(self, data, listWidget, keysDown, lock):
         super().__init__(listWidget, keysDown, lock)
+        self.reset(data)
+
+    def reset(self, data):
         self.data = data
         self.stopStart = 0
         self.stopDelta = 0
@@ -102,7 +105,7 @@ class ScrollEvent(ReleaselessEvent):
         self._onEvent(StepEnum.MOUSE_SCROLL, dy, increment=True)
 
     def _updateText(self):
-        self.endPosWidget.setText(f'Y: {self.data}')
+        self.endPosWidget.setText(str(self.data))
 
     def update(self):
         self._update(StepEnum.MOUSE_SCROLL, self._updateText, reset=True)

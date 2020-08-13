@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QLabel, QWidget, QLineEdit, QKeySequenceEdit
 class EditLabel(QLabel):
     def __init__(self, editor, defaultText='', parent=None):
         super().__init__(defaultText, parent=parent)
-        self.text = defaultText
+        self.savedText = defaultText
         self.editor = editor
         self.editor.hide()
 
@@ -12,7 +12,7 @@ class EditLabel(QLabel):
 
     def _updateText(self, newText):
         if newText:
-            self.text = newText
+            self.savedText = newText
             self.setText(newText)
         self.editor.hide()
         self.show()
@@ -36,7 +36,7 @@ class EditLabelLine(EditLabel):
         self.editor.setValidator(validator) 
 
     def mouseDoubleClickEvent(self, event):
-        self.editor.setText(self.text)
+        self.editor.setText(self.savedText)
         self._beginEdit()
 
 class EditLabelKeySequence(EditLabel):

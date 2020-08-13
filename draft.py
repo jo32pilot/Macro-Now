@@ -111,7 +111,9 @@ if __name__ == "__main__":
     MainWindow.show()
 
     #temp
-    watcher = KeyWatcher(ui.listWidget, None)
-    PumpMessages()
+    watcher = KeyWatcher(ui.listWidget, ui.totalTime)
+    ui.recordButton.toggled.connect(watcher.toggleRecord)
+    ui.addButton.clicked.connect(ui.listWidget.parseSteps)
+    #PumpMessages()
 
     sys.exit(app.exec_())
