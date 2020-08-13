@@ -22,34 +22,34 @@ class StepEvent():
 
 
 class KeyboardEvent(StepEvent):
-    def onPress(self, key):
+    def onPress(self, startTime, key):
         if key not in self.keysDown:
             # when start recording, set self.currentTime to 0 and 
             # set start time
             press = self.listWidget.listWidgetAddStep(
-                    StepEnum.KEY, str(key)).getPress()
+                    startTime, StepEnum.KEY, str(key)).getPress()
             self._dictAdd(key, (press, time.time()))
 
     def onRelease(self, key):
         self._dictDel(key)
 
 class ClickEvent(StepEvent):
-    def onClick(self, x, y, button, pressed):
+    def onClick(self, startTime, x, y, button, pressed):
         stepType = StepEnum.MOUSE_LEFT if button == mouse.Button.left else \
                 StepEnum.MOUSE_RIGHT
         if pressed:
             press = self.listWidget.listWidgetAddStep(
-                    stepType, (x, y)).getPress()
+                    startTime, stepType, (x, y)).getPress()
             self._dictAdd(button, (press, time.time()))
         else:
             self._dictDel(button)
 
 class WaitEvent(StepEvent):
-    def onWait(self):
+    def onWait(self, startTime):
         # TODO might need to sync this
         if len(self.keysDown) == 0:
             press = self.listWidget.listWidgetAddStep(
-                    StepEnum.ACTIVE_WAIT, None).getPress()
+                    startTime, StepEnum.ACTIVE_WAIT, None).getPress()
             self._dictAdd(StepEnum.ACTIVE_WAIT, (press, time.time()))
         elif StepEnum.ACTIVE_WAIT in self.keysDown and len(self.keysDown) > 1:
             self._dictDel(StepEnum.ACTIVE_WAIT)
@@ -66,10 +66,10 @@ class ReleaselessEvent(StepEvent):
         self.endPosWidget = None
         self.check = False
 
-    def _onEvent(self, stepType, data, increment=False):
+    def _onEvent(self, startTime, stepType, data, increment=False):
         if stepType not in self.keysDown:
             container = self.listWidget.listWidgetAddStep(
-                    stepType, [self.data, data])
+                    startTime, stepType, [self.data, data])
 
             press = container.getPress()
             self.endPosWidget = container.getEditable()
@@ -101,8 +101,8 @@ class ReleaselessEvent(StepEvent):
             self.check = False
 
 class ScrollEvent(ReleaselessEvent):
-    def onScroll(self, x, y, dx, dy):
-        self._onEvent(StepEnum.MOUSE_SCROLL, dy, increment=True)
+    def onScroll(self, startTime, x, y, dx, dy):
+        self._onEvent(startTime, StepEnum.MOUSE_SCROLL, dy, increment=True)
 
     def _updateText(self):
         self.endPosWidget.setText(str(self.data))
@@ -111,9 +111,9 @@ class ScrollEvent(ReleaselessEvent):
         self._update(StepEnum.MOUSE_SCROLL, self._updateText, reset=True)
 
 class MoveEvent(ReleaselessEvent):
-    def onMove(self, x, y):
+    def onMove(self, startTime, x, y):
         coords = (x, y)
-        self._onEvent(StepEnum.MOUSE_MOVE, coords)
+        self._onEvent(startTime, StepEnum.MOUSE_MOVE, coords)
 
     def _updateText(self):
         x, y = self.data

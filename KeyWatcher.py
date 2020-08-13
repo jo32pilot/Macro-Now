@@ -13,9 +13,11 @@ import time
 
 class KeyWatcher():
 
-    def __init__(self, listWidget, totalTime):
+    def __init__(self, listWidget, totalTimeDisp):
         self.listWidget = listWidget
-        self.totalTime = totalTime
+        self.totalTimeDisp = totalTimeDisp
+        self.recordStartTime = 0
+        self.startTime = 0
         self.recording = False
         self.keysDown = dict()
         self.lock = Lock()
@@ -29,8 +31,6 @@ class KeyWatcher():
         self.scrollEvent = ScrollEvent(0, listWidget, self.keysDown, self.lock)
         self.moveEvent = MoveEvent(self.mouseController.position, listWidget, 
                 self.keysDown, self.lock)
-
-
 
         self.keyboard = keyboard.Listener(on_press=self.onPressEmit, 
                 on_release=self.onReleaseEmit)
@@ -57,6 +57,7 @@ class KeyWatcher():
             self.listWidget.mouseScroll.connect(self.scrollEvent.onScroll)
             self.listWidget.mouseMove.connect(self.moveEvent.onMove)
 
+            self.recordStartTime = time.time()
             self.recording = True
             self.updater = Thread()
             self.startUpdater()
@@ -71,37 +72,31 @@ class KeyWatcher():
             self.recording = False
             self._clearRecordState()
 
-    def runMacro(self, steps):
-        # TODO turn off some functionality when running macro or stop running 
-        # macro
-        for step in steps:
-            stepType, data, holdTime = step
-            if stepType == StepEnum.ACTIVE_WAIT:
-
-
+    # TODO turn off some functionality when running macro or stop running 
+    # macro
 
     def canonize(func):       
         return lambda self, key: func(self, self.keyboard.canonical(key))
 
     @canonize
     def onPressEmit(self, key):
-        self.listWidget.keyPress.emit(key)
+        self.listWidget.keyPress.emit(self.startTime, key)
 
     @canonize
     def onReleaseEmit(self, key):
-        self.listWidget.keyRelease.emit(key)
+        self.listWidget.keyRelease.emit(self.startTime, key)
 
     def onClickEmit(self, x, y, button, pressed):
-        self.listWidget.mousePress.emit(x, y, button, pressed)
+        self.listWidget.mousePress.emit(self.startTime, x, y, button, pressed)
 
     def onWaitEmit(self):
-        self.listWidget.wait.emit()
+        self.listWidget.wait.emit(self.startTime)
 
     def onScrollEmit(self, x, y, dx, dy):
-        self.listWidget.mouseScroll.emit(x, y, dx, dy)
+        self.listWidget.mouseScroll.emit(self.startTime, x, y, dx, dy)
 
     def onMouseMoveEmit(self, x, y):
-        self.listWidget.mouseMove.emit(x, y)
+        self.listWidget.mouseMove.emit(self.startTime, x, y)
 
     def startUpdater(self):
         if not self.updater.is_alive():
@@ -116,6 +111,7 @@ class KeyWatcher():
 
     def _update(self):
         while self.recording:
+            self.startTime = time.time() - self.recordStartTime
             if StepEnum.MOUSE_SCROLL in self.keysDown:
                 self.scrollEvent.update()
             if StepEnum.MOUSE_MOVE in self.keysDown:

@@ -31,7 +31,7 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
         self._finalizeContainer(hLayout)
 
 class KeyListWidgetStep(KeyListWidgetContainer):
-    def __init__(self, stepType, data=None, total=None, parent=None):
+    def __init__(self, startTime, stepType, data=None, parent=None):
         super().__init__(QWidget())
 
         self.stepType = stepType 
@@ -44,9 +44,9 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         self.pressTime = EditLabelLine('0')
         self.pressTime.setValidator(validator)
         #pressTime.setMinimumWidth()
-        totalTime = EditLabelLine(str(total))
-        totalTime.setValidator(validator)
-        #totalTime.setMinimumWidth(100)
+        self.startTime = EditLabelLine(str(startTime))
+        self.startTime.setValidator(validator)
+        #startTime.setMinimumWidth(100)
 
         self.savedParent = parent
 
@@ -55,13 +55,16 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         hLayout.addWidget(self.pressTime)
         hLayout.addWidget(self.pressTime.getEditor())
         hLayout.addStretch()
-        hLayout.addWidget(totalTime)
-        hLayout.addWidget(totalTime.getEditor())
+        hLayout.addWidget(self.startTime)
+        hLayout.addWidget(self.startTime.getEditor())
 
         self._finalizeContainer(hLayout)
 
     def getPress(self):
         return self.pressTime
+
+    def getStart(self):
+        return self.startTime
 
     def getEditable(self):
         return self.editable
@@ -72,7 +75,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         Return: A tuple containing the parsed data. The tuple is formatted as
                 follows:
 
-                (step_type, type_data, hold_time)
+                (step_type, type_data, hold_time, start_time)
 
                 where type_data depends on what step_type is. For each of the
                 following step types, we have the following data:
@@ -94,6 +97,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         valueAt = lambda i: float(textAt(i))
         data = None
         time = float(self.pressTime.text())
+        start = float(self.startTime.text())
         if (self.stepType == StepEnum.MOUSE_LEFT or 
                 self.stepType == StepEnum.MOUSE_RIGHT):
 
@@ -110,7 +114,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         elif self.stepType == StepEnum.KEY:
             data = textAt(0)
 
-        return (self.stepType, data, time)
+        return (self.stepType, data, time, start)
 
             
     def _removeWidget(self, idx, layout):
