@@ -112,7 +112,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
             data = (start, end)
 
         elif self.stepType == StepEnum.KEY:
-            data = textAt(0)
+            data = textAt(0).strip("'")
 
         return (self.stepType, data, time, startTime)
 

@@ -30,7 +30,7 @@ class KeyboardEvent(StepEvent):
                     startTime, StepEnum.KEY, str(key)).getPress()
             self._dictAdd(key, (press, time.time()))
 
-    def onRelease(self, key):
+    def onRelease(self, startTime, key):
         self._dictDel(key)
 
 class ClickEvent(StepEvent):

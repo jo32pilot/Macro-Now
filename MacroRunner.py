@@ -10,35 +10,49 @@ class MacroRunner(Thread):
         super().__init__(target=self.runMacro, args=args)
 
     def runMacro(self, steps, totalTime, mouse, keyboard):
-        start = time.time()
+        runStart = time.time()
 
-        currTime = time.time() - start
+        currTime = time.time() - runStart
         pq = PriorityQueue()
         nextStep = 0
         scrolling = moving = False
-        ticksPerScroll = ticksPerMove = 0
-        currScrollTick = currMoveTick = 0
+        ticksPerScroll = 0
+        ticksPerMove = (0, 0)
         scrollStartTime = moveStartTime = 0
+        currScrollTick = 0
+        currMoveTick = [0, 0]
         scrollDir = 0
         moveDir = (0, 0)
 
         while currTime < totalTime:
+            # no more steps to perform
+            if nextStep >= len(steps):
+                print(currTime)
+                currTime = time.time() - runStart
+                time.sleep(.01)
+                continue
 
             step = steps[nextStep]
+            #print(step)
             stepType, data, holdTime, stepStart = step
-
             # check if ready to start next step
-            if stepStart >= currTime:
+            if stepStart <= currTime:
 
                 nextStep += 1
+                #print((holdTime, stepType, data, stepStart))
                 pq.put((holdTime, stepType, data, stepStart))
-
                 # perform step
                 if stepType == StepEnum.MOUSE_LEFT:
+                    prev = mouse.position
+                    mouse.position = data
                     mouse.press(Button.left)
+                    mouse.position = prev
                         
                 elif stepType == StepEnum.MOUSE_RIGHT:
+                    prev = mouse.position
+                    mouse.position = data
                     mouse.press(Button.right)
+                    mouse.position = prev
 
                 elif stepType == StepEnum.MOUSE_SCROLL:
                     ticksPerScroll = abs(holdTime / data)
@@ -61,17 +75,17 @@ class MacroRunner(Thread):
                             holdTime / distVec[1])
                     moving = True
                     moveStartTime = time.time()
-                    xDir = distVec[0] / abs(distVec[0])
-                    yDir = distVec[1] / abs(distVec[1])
+                    xDir = distVec[0] / abs(distVec[0]) if distVec[0] != 0 else 0
+                    yDir = distVec[1] / abs(distVec[1]) if distVec[1] != 0 else 0
                     moveDir = (xDir, yDir)
-                    mouse.move(xDir, yDir)
-                    currMoveTick = 1
+                    currMoveTick = [0, 0]
 
                 elif stepType == StepEnum.KEY:
                     keyboard.press(data)
 
             # top denotes the step with the highest priority
-            topHoldTime, topStepType, topData, topStart = pq.queue[0]
+            topHoldTime, topStepType, topData, topStart = \
+                    pq.queue[0] if len(pq.queue) > 0 else (0, None, None, 0)
 
             currScrollTime = time.time() - scrollStartTime
             currTickThreshold = ticksPerScroll * currScrollTick
@@ -90,26 +104,30 @@ class MacroRunner(Thread):
                 mouse.scroll(0, yScroll)
                 currScrollTick += numScroll
 
-            
             currMoveTime = time.time() - moveStartTime
-            currTickThreshold = ticksPerMove * currMoveTick
-            if moving and currMoveTime > currTickThreshold:
-                #TODO, seperate into two if cases, 1 for x, 1 for y
-                numMove = (currMoveTime - currTickThreshold) // ticksPerMove
-                xMove = moveDir[0] * numMove
-                yMove = moveDir[1] * numMove
-                mouse.move(xMove, yMove)
-                currScrollTick += numMove
+            if moving:
+                xTickThreshold = ticksPerMove[0] * currMoveTick[0]
+                yTickThreshold = ticksPerMove[1] * currMoveTick[1]
+                xNumMove = (currMoveTime - xTickThreshold) // ticksPerMove[0]
+                yNumMove = (currMoveTime - yTickThreshold) // ticksPerMove[1]
+
+                if currMoveTime > xTickThreshold:
+                    xMove = moveDir[0] * xNumMove
+                    mouse.move(xMove, 0)
+                    currMoveTick[0] += xNumMove
+                if currMoveTime > yTickThreshold:
+                    yMove = moveDir[1] * yNumMove
+                    mouse.move(0, yMove)
+                    currMoveTick[1] += yNumMove
+
 
 
             # if the time when the step was first performed plus the time 
             # the step was held for is less than the amount of time since
             # the macro started
-            if topStart + topHoldTime < currTime:
-
+            if topStepType != None and topStart + topHoldTime < currTime:
                 # step is done so remove from queue
-                pq.get()
-                    
+                pq.get(block=False)
                 # unperform step
                 if topStepType == StepEnum.MOUSE_LEFT:
                     mouse.release(Button.left)
@@ -128,11 +146,8 @@ class MacroRunner(Thread):
                 elif topStepType == StepEnum.KEY:
                     keyboard.release(topData)
 
-
-
-            currTime = time.time() - start
+            currTime = time.time() - runStart
 
             # sleep for cpu
             time.sleep(.01)
-
-                    
+                            
