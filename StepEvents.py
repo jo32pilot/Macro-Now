@@ -68,8 +68,9 @@ class ReleaselessEvent(StepEvent):
 
     def _onEvent(self, startTime, stepType, data, increment=False):
         if stepType not in self.keysDown:
+            defaultData = self.data if increment else [self.data, data]
             container = self.listWidget.listWidgetAddStep(
-                    startTime, stepType, [self.data, data])
+                    startTime, stepType, defaultData)
 
             press = container.getPress()
             self.endPosWidget = container.getEditable()

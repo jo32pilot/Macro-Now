@@ -7,6 +7,9 @@ from threading import Thread, Lock
 from util import synchronize
 import time
 
+# TODO temp
+from MacroRunner import MacroRunner
+
 # maybe can turn this all into snake case?
 
 # TODO for mouse move and scroll only change time for time that user moves
@@ -17,6 +20,7 @@ class KeyWatcher():
         self.listWidget = listWidget
         self.totalTimeDisp = totalTimeDisp
         self.recordStartTime = 0
+        self.recordTotalTime = 0
         self.startTime = 0
         self.recording = False
         self.keysDown = dict()
@@ -45,6 +49,15 @@ class KeyWatcher():
     def _clearRecordState(self):
         self.keysDown.clear()
 
+    def runMacro(self):
+        # if user hits multiple times, stick in queue and start new thread
+        # when last finishes
+        steps = self.listWidget.getParsedSteps()
+        runner = MacroRunner(steps, self.recordTotalTime, self.mouseController,
+                self.keyController)
+        runner.start()
+
+
     def toggleRecord(self, record):
         if record:
             self.scrollEvent.reset(0)
@@ -71,6 +84,11 @@ class KeyWatcher():
 
             self.recording = False
             self._clearRecordState()
+            newTotalTime = time.time() - self.recordStartTime
+            self.recordTotalTime = (newTotalTime if self.recordTotalTime == 0 
+                    else self.recordTotalTime + newTotalTime)
+
+            self.listWidget.parseSteps()
 
     # TODO turn off some functionality when running macro or stop running 
     # macro

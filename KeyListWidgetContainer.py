@@ -97,7 +97,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         valueAt = lambda i: float(textAt(i))
         data = None
         time = float(self.pressTime.text())
-        start = float(self.startTime.text())
+        startTime = float(self.startTime.text())
         if (self.stepType == StepEnum.MOUSE_LEFT or 
                 self.stepType == StepEnum.MOUSE_RIGHT):
 
@@ -114,7 +114,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         elif self.stepType == StepEnum.KEY:
             data = textAt(0)
 
-        return (self.stepType, data, time, start)
+        return (self.stepType, data, time, startTime)
 
             
     def _removeWidget(self, idx, layout):

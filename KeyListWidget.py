@@ -15,6 +15,10 @@ class KeyListWidget(QListWidget):
         super().__init__(parent=parent)
         self.savedParent = parent
         self.stepContainers = []
+        self.parsedSteps = []
+
+    def getParsedSteps(self):
+        return self.parsedSteps
 
     def listWidgetAddEditLabel(self, text):
         item = QListWidgetItem()
@@ -35,8 +39,9 @@ class KeyListWidget(QListWidget):
         return container
 
     def parseSteps(self):
+        self.parsedSteps = []
         for step in self.stepContainers:
-            print(step.getParsed())
+            self.parsedSteps.append(step.getParsed())
 
     def _finalizeItem(self, item, container):
         item.setSizeHint(container.sizeHint())    

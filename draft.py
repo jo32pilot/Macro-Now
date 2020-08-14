@@ -46,12 +46,12 @@ class Ui_MainWindow(object):
 "padding: 4px;")
         self.deleteButton.setText("")
         self.deleteButton.setObjectName("deleteButton")
-        self.undoButtone = QtWidgets.QPushButton(self.centralwidget)
-        self.undoButtone.setGeometry(QtCore.QRect(800, 30, 30, 30))
-        self.undoButtone.setStyleSheet("image: url(:/images/images/redo.png);\n"
+        self.undoButton = QtWidgets.QPushButton(self.centralwidget)
+        self.undoButton.setGeometry(QtCore.QRect(800, 30, 30, 30))
+        self.undoButton.setStyleSheet("image: url(:/images/images/redo.png);\n"
 "padding: 4px;")
-        self.undoButtone.setText("")
-        self.undoButtone.setObjectName("undoButtone")
+        self.undoButton.setText("")
+        self.undoButton.setObjectName("undoButton")
         self.configButton = QtWidgets.QPushButton(self.centralwidget)
         self.configButton.setGeometry(QtCore.QRect(900, 30, 30, 30))
         self.configButton.setStyleSheet("image: url(:/images/images/settings.png);\n"
@@ -114,6 +114,7 @@ if __name__ == "__main__":
     watcher = KeyWatcher(ui.listWidget, ui.totalTime)
     ui.recordButton.toggled.connect(watcher.toggleRecord)
     ui.addButton.clicked.connect(ui.listWidget.parseSteps)
+    ui.undoButton.clicked.connect(watcher.runMacro)
     #PumpMessages()
 
     sys.exit(app.exec_())
