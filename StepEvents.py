@@ -22,12 +22,16 @@ class StepEvent():
 
 
 class KeyboardEvent(StepEvent):
+    def _parseKey(self, key):
+        key = str(key).strip("'")
+        return key if len(key) == 1 else key.split('.')[1]
+
     def onPress(self, startTime, key):
         if key not in self.keysDown:
             # when start recording, set self.currentTime to 0 and 
             # set start time
             press = self.listWidget.listWidgetAddStep(
-                    startTime, StepEnum.KEY, str(key)).getPress()
+                    startTime, StepEnum.KEY, self._parseKey(key)).getPress()
             self._dictAdd(key, (press, time.time()))
 
     def onRelease(self, startTime, key):
