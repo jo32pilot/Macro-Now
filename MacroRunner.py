@@ -52,7 +52,7 @@ class MacroRunner(Thread):
                     mouse.press(Button.right)
 
                 elif stepType == StepEnum.MOUSE_SCROLL:
-                    ticksPerScroll = abs(holdTime / data)
+                    ticksPerScroll = abs(holdTime / data) if data != 0 else 0
                     scrolling = True
                     scrollStartTime = time.time()
                     scrollDir = 1 if data > 0 else -1
