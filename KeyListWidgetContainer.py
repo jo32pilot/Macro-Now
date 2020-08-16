@@ -22,11 +22,14 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
     def __init__(self, listWidget, text):
         super().__init__(MacroWidget(listWidget))
         editLabel = EditLabelLine(text)
+        keyEdit = QKeySequenceEdit()
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
         hLayout.addWidget(editLabel.getEditor())
-        hLayout.addWidget(QKeySequenceEdit())
+        hLayout.addStretch()
+        hLayout.addWidget(keyEdit)
+        keyEdit.keySequenceChanged.connect(lambda keys: print(keys.toString()))
 
         self._finalizeContainer(hLayout)
 

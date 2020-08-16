@@ -14,8 +14,18 @@ class KeyListWidget(QListWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.savedParent = parent
+        self.currFocus = None
         self.stepContainers = []
         self.parsedSteps = []
+    
+    def getCurrFocus(self):
+        return self.currFocus
+
+    def setCurrFocus(self, macroWidget):
+        self.currFocus = macroWidget
+
+    def setCurrFocusSteps(self):
+        self.getCurrFocus().setSteps(self.parsedSteps)
 
     def getParsedSteps(self):
         return self.parsedSteps
@@ -26,11 +36,6 @@ class KeyListWidget(QListWidget):
         self._finalizeItem(item, container)
 
     def listWidgetAddStep(self, startTime, stepType, data=None):
-        '''
-        
-        Return: List of widgets that need to be editted in the key watcher.
-                The first element in the list needs to be the hold time widget.
-        '''
         item = QListWidgetItem()
         container = KeyListWidgetStep(startTime, stepType, data, 
                 parent=self.savedParent)

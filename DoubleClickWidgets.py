@@ -39,6 +39,16 @@ class EditLabelLine(EditLabel):
         self.editor.setText(self.savedText)
         self._beginEdit()
 
+class EditLabelCustomKey(EditLableLine):
+    def __init__(self, defaultText='', parent=None):
+        lineEdit = QLineEdit()
+        lineEdit.setReadOnly(True)
+        EditLabel.__init__(self, lineEdit, defaultText=defaultText, 
+                parent=parent)
+        
+    def mouseDoubleClickEvent(self, event):
+        super().mouseDoubleClickEvent(event)
+
 class EditLabelKeySequence(EditLabel):
     def __init__(self, defaultText='', parent=None):
         super().__init__(QKeySequenceEdit(), defaultText=defaultText, parent=parent)
@@ -65,7 +75,13 @@ class MacroWidget(QWidget):
         self.listWidget = listWidget
 
     def mouseDoubleClickEvent(self, event):
-        print('double click macro widget')
+        self.listWidget.setCurrFocus(self)
         self.listWidget.clear()
+
+    def getSteps(self):
+        return self.steps
+
+    def setSteps(self, steps):
+        self.steps = steps
 
 

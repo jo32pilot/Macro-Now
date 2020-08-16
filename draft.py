@@ -113,8 +113,9 @@ if __name__ == "__main__":
     #temp
     watcher = KeyWatcher(ui.listWidget, ui.totalTime)
     ui.recordButton.toggled.connect(watcher.toggleRecord)
-    ui.addButton.clicked.connect(ui.listWidget.parseSteps)
-    ui.undoButton.clicked.connect(watcher.runMacro)
+    ui.addButton.clicked.connect(
+            lambda: ui.listWidget.listWidgetAddEditLabel('untitled'))
+    #ui.undoButton.clicked.connect(watcher.runMacro)
     #PumpMessages()
 
     sys.exit(app.exec_())

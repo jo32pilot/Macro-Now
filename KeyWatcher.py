@@ -3,6 +3,7 @@ from StepEvents import KeyboardEvent, ClickEvent, WaitEvent, ScrollEvent, \
 from win32gui import PostQuitMessage
 from StepConstants import StepEnum
 from pynput import mouse, keyboard
+from pynput.keyboard import HotKey
 from threading import Thread, Lock
 from util import synchronize
 import time
@@ -49,9 +50,9 @@ class KeyWatcher():
     def _clearRecordState(self):
         self.keysDown.clear()
 
-    def runMacro(self):
+    def _runMacro(self):
         # if user hits multiple times, stick in queue and start new thread
-        # when last finishes
+        # when last finishes. (if thread is alive, queue.put())
         steps = self.listWidget.getParsedSteps()
         runner = MacroRunner(steps, self.recordTotalTime, self.mouseController,
                 self.keyController)
@@ -89,6 +90,8 @@ class KeyWatcher():
                     else self.recordTotalTime + newTotalTime)
 
             self.listWidget.parseSteps()
+            self.listWidget.setCurrFocusSteps()
+            
 
     # TODO turn off some functionality when running macro or stop running 
     # macro
