@@ -50,11 +50,11 @@ class KeyWatcher():
     def _clearRecordState(self):
         self.keysDown.clear()
 
-    def _runMacro(self):
+    def _runMacro(self, steps, time):
         # if user hits multiple times, stick in queue and start new thread
         # when last finishes. (if thread is alive, queue.put())
         steps = self.listWidget.getParsedSteps()
-        runner = MacroRunner(steps, self.recordTotalTime, self.mouseController,
+        runner = MacroRunner(steps, time, self.mouseController, 
                 self.keyController)
         runner.start()
 

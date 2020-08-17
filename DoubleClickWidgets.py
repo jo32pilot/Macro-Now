@@ -39,19 +39,10 @@ class EditLabelLine(EditLabel):
         self.editor.setText(self.savedText)
         self._beginEdit()
 
-class EditLabelCustomKey(EditLableLine):
-    def __init__(self, defaultText='', parent=None):
-        lineEdit = QLineEdit()
-        lineEdit.setReadOnly(True)
-        EditLabel.__init__(self, lineEdit, defaultText=defaultText, 
-                parent=parent)
-        
-    def mouseDoubleClickEvent(self, event):
-        super().mouseDoubleClickEvent(event)
-
 class EditLabelKeySequence(EditLabel):
-    def __init__(self, defaultText='', parent=None):
-        super().__init__(QKeySequenceEdit(), defaultText=defaultText, parent=parent)
+    def __init__(self, recorder, defaultText='', parent=None):
+        super().__init__(QKeySequenceEdit(), defaultText=defaultText,
+                parent=parent)
         self.editor.editingFinished.connect(lambda: self.updateText())
 
     def updateText(self):
@@ -61,6 +52,36 @@ class EditLabelKeySequence(EditLabel):
     def mouseDoubleClickEvent(self, event):
         self.editor.clear()
         self._beginEdit()
+
+class EditLabelKeySequence(EditLabel):
+    # TODO param for existing keys
+    def __init__(self, recorder, defaultText='', parent=None):
+        super().__init__(QKeySequenceEdit(), defaultText=defaultText,
+                parent=parent)
+        self.recorder = recorder
+        # TODO set this when finish hotkey recording
+        self.keys = None
+        # TODO set these when finish steps recording
+        self.steps = None
+        self.time = 0
+
+    def updateText(self):
+        newText = self.editor.keySequence().toString()
+        self._updateText(newText)
+
+    def _finishEditing(self):
+        self.keys = keys
+        self.updateText()
+
+    def mouseDoubleClickEvent(self, event):
+        self.editor.clear()
+        self._beginEdit()
+        # TODO set variables / display through recordHotKey
+        # either by passing in self or passing in function
+        # TODO is self.keys dynamically updating if passed into a
+        # function like this
+        recorder.recordHotkey(self.keys, self.steps, self.time,
+                self._finishEditing)
 
 class MacroWidget(QWidget):
     def __init__(self, listWidget, parent=None):
@@ -83,5 +104,4 @@ class MacroWidget(QWidget):
 
     def setSteps(self, steps):
         self.steps = steps
-
 

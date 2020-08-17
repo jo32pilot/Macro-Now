@@ -19,16 +19,17 @@ class KeyListWidgetContainer():
         return self.container.sizeHint()
 
 class KeyListWidgetMacro(KeyListWidgetContainer):
-    def __init__(self, listWidget, text):
+    def __init__(self, recorder, listWidget, text):
         super().__init__(MacroWidget(listWidget))
         editLabel = EditLabelLine(text)
-        keyEdit = QKeySequenceEdit()
+        keyEdit = EditLabelKeySequence(recorder)
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
         hLayout.addWidget(editLabel.getEditor())
         hLayout.addStretch()
         hLayout.addWidget(keyEdit)
+        hLayout.addWidget(keyEdit.getEditor())
         keyEdit.keySequenceChanged.connect(lambda keys: print(keys.toString()))
 
         self._finalizeContainer(hLayout)

@@ -30,9 +30,9 @@ class KeyListWidget(QListWidget):
     def getParsedSteps(self):
         return self.parsedSteps
 
-    def listWidgetAddEditLabel(self, text):
+    def listWidgetAddEditLabel(self, recorder, text):
         item = QListWidgetItem()
-        container = KeyListWidgetMacro(self, text)
+        container = KeyListWidgetMacro(recorder, self, text)
         self._finalizeItem(item, container)
 
     def listWidgetAddStep(self, startTime, stepType, data=None):

@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import *
 from KeyWatcher import KeyWatcher
 from win32gui import PumpMessages
 from KeyListWidget import KeyListWidget
+from Hotkeys import Hotkeys
 
 
 class Ui_MainWindow(object):
@@ -112,9 +113,13 @@ if __name__ == "__main__":
 
     #temp
     watcher = KeyWatcher(ui.listWidget, ui.totalTime)
+    hotkeyRecorder = Hotkeys(watcher)
     ui.recordButton.toggled.connect(watcher.toggleRecord)
+
+    # lmao what is this line
     ui.addButton.clicked.connect(
-            lambda: ui.listWidget.listWidgetAddEditLabel('untitled'))
+            lambda: ui.listWidget.listWidgetAddEditLabel(
+            hotkeyRecorder, 'untitled'))
     #ui.undoButton.clicked.connect(watcher.runMacro)
     #PumpMessages()
 
