@@ -22,7 +22,7 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
     def __init__(self, recorder, listWidget, text):
         super().__init__(MacroWidget(listWidget))
         editLabel = EditLabelLine(text)
-        keyEdit = EditLabelKeySequence(recorder)
+        keyEdit = EditLabelKeySequence(recorder, 'Key here')
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
@@ -30,7 +30,8 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
         hLayout.addStretch()
         hLayout.addWidget(keyEdit)
         hLayout.addWidget(keyEdit.getEditor())
-        keyEdit.keySequenceChanged.connect(lambda keys: print(keys.toString()))
+        keyEdit.getEditor().keySequenceChanged.connect(
+                lambda keys: print(keys.toString()))
 
         self._finalizeContainer(hLayout)
 

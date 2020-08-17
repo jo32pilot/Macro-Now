@@ -1,8 +1,9 @@
 from pynput import keyboard
+from pynput.keyboard import HotKey
 
 class Hotkeys():
     def __init__(self, keyWatcher):
-        self.savedHotKeys = None
+        self.savedHotkeys = None
         self.currRecordSet = set()
         self.currSteps = None
         self.currTotalTime = 0
@@ -20,50 +21,52 @@ class Hotkeys():
         # TODO if no steps and total time passed in, add default function
         # for hot key (attach different event to listener)
         self.currSteps = steps
-        curr.currTotalTime = totalTime
+        self.currTotalTime = totalTime
         self.savedHotkeys = self.mapper._hotkeys
+        print(f'saved: {self.savedHotkeys} mapper: {self.mapper._hotkeys}')
         self.mapper._hotkeys = []
         self.updater = updater
         if not self.hotkeyRecorder or not self.hotkeyRecorder.is_alive():
+            onRelease = lambda key: self.onReleaseRecordHotkey(original)
             self.hotkeyRecorder = keyboard.Listener(
-                    on_press=self.onPressRecordHotKey, 
-                    on_release=self.onReleaseRecordHotKey)
+                    on_press=self.onPressRecordHotkey, 
+                    on_release=onRelease)
             self.hotkeyRecorder.start()
 
     def onPressRecordHotkey(self, key):
         self.currRecordSet.add(key)
-        hotkey = set(HotKey.parse(self.currRecordSet))
-        for mapping in self.savedHotKeys:
+        for mapping in self.savedHotkeys:
             conflicting = self.currRecordSet.issubset(mapping._keys) \
                     or mapping._keys.issubset(self.currRecordSet)
             if conflicting:
                 # TODO make both red / warn user
+                print(f'keys: {mapping._keys} curr {self.currRecordSet}')
                 print('conflicting hotkeys')
 
     def _finishRecording(self):
-        self.selfRecordSet = set()
+        self.currRecordSet = set()
         self.currSteps = None
         self.currTotalTime = None
         self.hotkeyRecorder.stop()
-        self.mapper._hotkeys = self.savedHotKeys
+        self.mapper._hotkeys = self.savedHotkeys + self.mapper._hotkeys
         self.updater = lambda: None
 
     # TODO combine bottom three
-    def onReleaseRecordHotKey(self, original=None):
+    def onReleaseRecordHotkey(self, original=None):
         # TODO need to stop editing
         if original:
-            idx = self.findHotKey(original)
+            idx = self.findHotkey(original)
             if idx == -1: 
                 # This case should never happen
-                print(f'{keys} doesn\'t exist even though it should')
+                print(f'{original} doesn\'t exist even though it should')
             else:
-                self.setHotKey(idx, self.currRecordSet, self.currSteps,
-                        self.currTotalSet)
+                self.setHotkey(idx, self.currRecordSet, self.currSteps,
+                        self.currTotalTime)
             
         else:
-            self.addHotKey(self.currRecordSet, self.currSteps,
+            self.addHotkey(self.currRecordSet, self.currSteps,
                     self.currTotalTime)
-        self.updater()
+        self.updater(self.currRecordSet)
         self._finishRecording()
 
     # on user begin edit key sequence
@@ -87,7 +90,7 @@ class Hotkeys():
         # may need more parsing logic for hotkey
         func = (lambda: self._runMacro(steps, totalTime)) \
                 if steps and totalTime else (lambda: print(f'{keys} added'))
-        hotkey = HotKey(HotKey.parse(keys), func)
+        hotkey = HotKey(keys, func)
         self.mapper._hotkeys.append(hotkey)
 
     def findHotkey(self, keys):
@@ -102,8 +105,8 @@ class Hotkeys():
 
 
         """
-        keys = HotKey.parse(keys)
-        for idx, mapping in enumerate(self.mapper._hotkeys):
+        keys = keys
+        for idx, mapping in enumerate(self.savedHotkeys):
             if keys == set(mapping._keys):
                 return idx
         return -1
@@ -111,8 +114,7 @@ class Hotkeys():
     def setHotkey(self, idx, keys, steps=None, totalTime=0):
         func = (lambda: self._runMacro(steps, totalTime)) \
                 if steps and totalTime else (lambda: print(f'{keys} set'))
-        hotkey = HotKey(HotKey.parse(keys),
-                lambda: self._runMacro(steps, totalTime))
-        self.mapper._hotkeys[idx] = hotkey
+        hotkey = HotKey(keys, lambda: self._runMacro(steps, totalTime))
+        self.savedHotkeys[idx] = hotkey
 
 

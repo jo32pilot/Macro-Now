@@ -69,7 +69,7 @@ class EditLabelKeySequence(EditLabel):
         newText = self.editor.keySequence().toString()
         self._updateText(newText)
 
-    def _finishEditing(self):
+    def _finishEditing(self, keys):
         self.keys = keys
         self.updateText()
 
@@ -80,7 +80,7 @@ class EditLabelKeySequence(EditLabel):
         # either by passing in self or passing in function
         # TODO is self.keys dynamically updating if passed into a
         # function like this
-        recorder.recordHotkey(self.keys, self.steps, self.time,
+        self.recorder.recordHotkey(self.keys, self.steps, self.time,
                 self._finishEditing)
 
 class MacroWidget(QWidget):
