@@ -39,8 +39,8 @@ class EditLabelLine(EditLabel):
         self.editor.setText(self.savedText)
         self._beginEdit()
 
-class EditLabelKeySequence(EditLabel):
-    def __init__(self, recorder, defaultText='', parent=None):
+class EditLabelKey(EditLabel):
+    def __init__(self, defaultText='', parent=None):
         super().__init__(QKeySequenceEdit(), defaultText=defaultText,
                 parent=parent)
         self.editor.editingFinished.connect(lambda: self.updateText())
@@ -84,7 +84,7 @@ class EditLabelKeySequence(EditLabel):
                 self._finishEditing)
 
 class MacroWidget(QWidget):
-    def __init__(self, listWidget, parent=None):
+    def __init__(self, listWidget, keyEdit, parent=None):
         """ 
         
         Args:
@@ -94,6 +94,7 @@ class MacroWidget(QWidget):
         """
         super().__init__(parent)
         self.listWidget = listWidget
+        self.keyEdit = keyEdit
 
     def mouseDoubleClickEvent(self, event):
         self.listWidget.setCurrFocus(self)
@@ -104,4 +105,16 @@ class MacroWidget(QWidget):
 
     def setSteps(self, steps):
         self.steps = steps
+
+    def getKeys(self):
+        return self.keyEdit.keys
+
+    def setSteps(self, steps):
+        self.keyEdit.steps = steps
+
+    def setTime(self, time):
+        self.time = time
+
+    def getRecorder(self):
+        return self.keyEdit.recorder
 

@@ -17,6 +17,8 @@ from MacroRunner import MacroRunner
 
 class KeyWatcher():
 
+
+    # TODO when press back button going to want to reset a bunch of these variables
     def __init__(self, listWidget, totalTimeDisp):
         self.listWidget = listWidget
         self.totalTimeDisp = totalTimeDisp
@@ -50,15 +52,18 @@ class KeyWatcher():
     def _clearRecordState(self):
         self.keysDown.clear()
 
+
+    # TODO this function doesn't need to be here,
+    # so we can probably get rid of keywatcher in hotkeys
     def _runMacro(self, steps, time):
         # if user hits multiple times, stick in queue and start new thread
         # when last finishes. (if thread is alive, queue.put())
-        steps = self.listWidget.getParsedSteps()
         runner = MacroRunner(steps, time, self.mouseController, 
                 self.keyController)
         runner.start()
 
 
+    # TODO on record start, disconnect other macros
     def toggleRecord(self, record):
         if record:
             self.scrollEvent.reset(0)
@@ -90,7 +95,21 @@ class KeyWatcher():
                     else self.recordTotalTime + newTotalTime)
 
             self.listWidget.parseSteps()
-            self.listWidget.setCurrFocusSteps()
+
+            currFocus = self.listWidget.getCurrFocus()
+            recorder = currFocus.getRecorder()
+            hotkey = currFocus.getKeys()
+            idx = recorder.findHotkey(hotkey, recording=False)
+            parsedSteps = self.listWidget.getParsedSteps()
+            if idx == -1:
+                recorder.addHotkey(hotkey, parsedSteps, self.recordTotalTime,
+                        recording=False)
+            else:
+                recorder.setHotkey(idx, hotkey, parsedSteps,
+                        self.recordTotalTime, recording=False)
+            currFocus.setSteps(parsedSteps)
+            currFocus.setTime(self.recordTotalTime)
+
             
 
     # TODO turn off some functionality when running macro or stop running 
@@ -132,7 +151,7 @@ class KeyWatcher():
 
     def _update(self):
         while self.recording:
-            self.startTime = time.time() - self.recordStartTime
+            self.startTime = time.time() - self.recordStartTime + self.recordTotalTime
             if StepEnum.MOUSE_SCROLL in self.keysDown:
                 self.scrollEvent.update()
             if StepEnum.MOUSE_MOVE in self.keysDown:

@@ -24,9 +24,6 @@ class KeyListWidget(QListWidget):
     def setCurrFocus(self, macroWidget):
         self.currFocus = macroWidget
 
-    def setCurrFocusSteps(self):
-        self.getCurrFocus().setSteps(self.parsedSteps)
-
     def getParsedSteps(self):
         return self.parsedSteps
 

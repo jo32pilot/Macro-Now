@@ -6,6 +6,7 @@ from threading import Thread
 import time
 
 class MacroRunner(Thread):
+
     def __init__(self, steps, totalTime, mouse, keyboard):
         args = (steps, totalTime, mouse, keyboard)
         super().__init__(target=self.runMacro, args=args)
@@ -23,52 +24,50 @@ class MacroRunner(Thread):
         scrollDir = 0
 
         while currTime < totalTime:
-            # no more steps to perform
-            if nextStep >= len(steps):
-                currTime = time.time() - runStart
-                time.sleep(.01)
-                continue
 
-            step = steps[nextStep]
-            stepType, data, holdTime, stepStart = step
-            # check if ready to start next step
-            if stepStart <= currTime:
+            # more steps to perform
+            if nextStep < len(steps):
+                step = steps[nextStep]
+                stepType, data, holdTime, stepStart = step
+                # check if ready to start next step
+                if stepStart <= currTime:
 
-                nextStep += 1
-                pq.put((holdTime, stepType, data, stepStart))
+                    nextStep += 1
+                    print((holdTime, stepType, data, stepStart))
+                    pq.put((holdTime, stepType, data, stepStart))
 
-                # perform step. no case for mouse move because we'll
-                # just move the mouse to the end at the end of the hold time.
-                # ran into problems when trying to simplify mouse movement
-                # into a straight line and moving gradually. Maybe can 
-                # save all points in mouse movement but sounds horribly
-                # ineffecient
-                if stepType == StepEnum.MOUSE_LEFT:
-                    mouse.position = data
-                    mouse.press(Button.left)
-                        
-                elif stepType == StepEnum.MOUSE_RIGHT:
-                    mouse.position = data
-                    mouse.press(Button.right)
+                    # perform step. no case for mouse move because we'll
+                    # just move the mouse to the end at the end of the hold time.
+                    # ran into problems when trying to simplify mouse movement
+                    # into a straight line and moving gradually. Maybe can 
+                    # save all points in mouse movement but sounds horribly
+                    # ineffecient
+                    if stepType == StepEnum.MOUSE_LEFT:
+                        mouse.position = data
+                        mouse.press(Button.left)
+                            
+                    elif stepType == StepEnum.MOUSE_RIGHT:
+                        mouse.position = data
+                        mouse.press(Button.right)
 
-                elif stepType == StepEnum.MOUSE_SCROLL:
-                    ticksPerScroll = abs(holdTime / data) if data != 0 else 0
-                    scrolling = True
-                    scrollStartTime = time.time()
-                    scrollDir = 1 if data > 0 else -1
-                    mouse.scroll(0, scrollDir)
-                    # TODO maybe shouldn't initialize to 1? might go 1 too far 
-                    # or too early
-                    currScrollTick = 1
+                    elif stepType == StepEnum.MOUSE_SCROLL:
+                        ticksPerScroll = abs(holdTime / data) if data != 0 else 0
+                        scrolling = True
+                        scrollStartTime = time.time()
+                        scrollDir = 1 if data > 0 else -1
+                        mouse.scroll(0, scrollDir)
+                        # TODO maybe shouldn't initialize to 1? might go 1 too far 
+                        # or too early
+                        currScrollTick = 1
 
-                elif stepType == StepEnum.MOUSE_MOVE:
-                    start, end = data
-                    x, y = start
-                    mouse.position = (int(x), int(y))
+                    elif stepType == StepEnum.MOUSE_MOVE:
+                        start, end = data
+                        x, y = start
+                        mouse.position = (int(x), int(y))
 
-                elif stepType == StepEnum.KEY:
-                    key = data if len(data) == 1 else keyConst(data)
-                    keyboard.press(key)
+                    elif stepType == StepEnum.KEY:
+                        key = data if len(data) == 1 else keyConst(data)
+                        keyboard.press(key)
 
             # top denotes the step with the highest priority
             topHoldTime, topStepType, topData, topStart = \
@@ -119,4 +118,3 @@ class MacroRunner(Thread):
 
             # sleep for cpu
             time.sleep(.01)
-                            

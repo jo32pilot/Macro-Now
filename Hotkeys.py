@@ -85,15 +85,16 @@ class Hotkeys():
     #
     # need to make own display
 
-    def addHotkey(self, keys, steps=None, totalTime=0):
+    def addHotkey(self, keys, steps=None, totalTime=0, recording=True):
         # each macro widget will have the step data to pass in and total time
         # may need more parsing logic for hotkey
-        func = (lambda: self._runMacro(steps, totalTime)) \
+        addTo = self.savedHotkeys if recording else self.mapper._hotkeys
+        func = (lambda: self.keyWatcher._runMacro(steps, totalTime)) \
                 if steps and totalTime else (lambda: print(f'{keys} added'))
         hotkey = HotKey(keys, func)
-        self.mapper._hotkeys.append(hotkey)
+        addTo.append(hotkey)
 
-    def findHotkey(self, keys):
+    def findHotkey(self, keys, recording=True):
         """Searches for existing hotkey in mapper.
 
         Args:
@@ -105,16 +106,18 @@ class Hotkeys():
 
 
         """
+        findIn = self.savedHotkeys if recording else self.mapper._hotkeys
         keys = keys
-        for idx, mapping in enumerate(self.savedHotkeys):
+        for idx, mapping in enumerate(findIn):
             if keys == set(mapping._keys):
                 return idx
         return -1
 
-    def setHotkey(self, idx, keys, steps=None, totalTime=0):
+    def setHotkey(self, idx, keys, steps=None, totalTime=0, recording=True):
+        addTo = self.savedHotkeys if recording else self.mapper._hotkeys
         func = (lambda: self._runMacro(steps, totalTime)) \
                 if steps and totalTime else (lambda: print(f'{keys} set'))
-        hotkey = HotKey(keys, lambda: self._runMacro(steps, totalTime))
-        self.savedHotkeys[idx] = hotkey
+        hotkey = HotKey(keys, lambda: self.keyWatcher._runMacro(steps, totalTime))
+        addTo[idx] = hotkey
 
 

@@ -23,7 +23,9 @@ class StepEvent():
 
 class KeyboardEvent(StepEvent):
     def _parseKey(self, key):
-        key = str(key).strip("'")
+        key = str(key)
+        # special case where character is a single quote
+        key = key.strip("'") if key != "\"'\"" else "'"
         return key if len(key) == 1 else key.split('.')[1]
 
     def onPress(self, startTime, key):

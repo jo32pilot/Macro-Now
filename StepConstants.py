@@ -9,6 +9,9 @@ class StepEnum(Enum):
     MOUSE_MOVE = 4
     KEY = 5
 
+    def __lt__(self, other):
+        return self.value < other.value
+
 
 _ENUM_CONST = {
     StepEnum.ACTIVE_WAIT: ('image: url(:/images/images/active_wait.png);\npadding:3px;', 'Active Wait Time'),

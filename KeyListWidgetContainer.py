@@ -1,4 +1,5 @@
-from DoubleClickWidgets import EditLabelLine, EditLabelKeySequence, MacroWidget
+from DoubleClickWidgets import EditLabelLine, EditLabelKey, \
+        EditLabelKeySequence, MacroWidget
 from StepConstants import StepEnum, stepImage, stepDescriptor
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtWidgets import *
@@ -20,9 +21,10 @@ class KeyListWidgetContainer():
 
 class KeyListWidgetMacro(KeyListWidgetContainer):
     def __init__(self, recorder, listWidget, text):
-        super().__init__(MacroWidget(listWidget))
-        editLabel = EditLabelLine(text)
         keyEdit = EditLabelKeySequence(recorder, 'Key here')
+        macroWidget = MacroWidget(listWidget, keyEdit)
+        editLabel = EditLabelLine(text)
+        super().__init__(macroWidget)
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
@@ -117,7 +119,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
             data = (start, end)
 
         elif self.stepType == StepEnum.KEY:
-            data = textAt(0).strip("'")
+            data = textAt(0)
 
         return (self.stepType, data, time, startTime)
 
@@ -237,8 +239,8 @@ class KeyListWidgetStep(KeyListWidgetContainer):
             returnWidgets.append(yDir)
 
         elif stepType == StepEnum.KEY:
-            edit_disp = data if data else 'Key Here'
-            editLabelKS = EditLabelKeySequence(edit_disp)
+            editDisp = data if data else 'Key Here'
+            editLabelKS = EditLabelKey(editDisp)
             containerLayout.addWidget(editLabelKS)
             containerLayout.addWidget(editLabelKS.getEditor())
         elif stepType == StepEnum.ACTIVE_WAIT:
