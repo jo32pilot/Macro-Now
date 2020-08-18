@@ -10,6 +10,9 @@ class EditLabel(QLabel):
     def getEditor(self):
         return self.editor
 
+    def getSavedText(self):
+        return self.savedText
+
     def _updateText(self, newText):
         if newText:
             self.savedText = newText
@@ -84,7 +87,7 @@ class EditLabelKeySequence(EditLabel):
                 self._finishEditing)
 
 class MacroWidget(QWidget):
-    def __init__(self, listWidget, keyEdit, parent=None):
+    def __init__(self, listWidget, keyEdit, editLabel, parent=None):
         """ 
         
         Args:
@@ -95,25 +98,39 @@ class MacroWidget(QWidget):
         super().__init__(parent)
         self.listWidget = listWidget
         self.keyEdit = keyEdit
+        self.editLabel = editLabel
 
     def mouseDoubleClickEvent(self, event):
         self.listWidget.setCurrFocus(self)
+        self.listWidget.backupMacros()
         self.listWidget.clear()
 
     def getSteps(self):
-        return self.steps
-
-    def setSteps(self, steps):
-        self.steps = steps
-
-    def getKeys(self):
-        return self.keyEdit.keys
+        return self.keyEdit.steps
 
     def setSteps(self, steps):
         self.keyEdit.steps = steps
 
+    def getKeys(self):
+        return self.keyEdit.keys
+
+    def setKeys(self, keys):
+        self.keyEdit.keys = keys
+
+    def getKeyString(self):
+        return self.keyEdit.getSavedText()
+
+    def setKeyString(self, keyString):
+        self.keyEdit._updateText(keyString)
+
+    def getTime(self):
+        return self.keyEdit.time
+
     def setTime(self, time):
-        self.time = time
+        self.keyEdit.time = time
+
+    def getMacroName(self):
+        return self.editLabel.getSavedText()
 
     def getRecorder(self):
         return self.keyEdit.recorder

@@ -62,6 +62,10 @@ class KeyWatcher():
                 self.keyController)
         runner.start()
 
+    def onBack(self):
+        # only reset recordTotalTime if no longer on same macro, need to reload
+        # this when changing macros
+        self.recordTotalTime = 0
 
     # TODO on record start, disconnect other macros
     def toggleRecord(self, record):
@@ -110,7 +114,7 @@ class KeyWatcher():
             currFocus.setSteps(parsedSteps)
             currFocus.setTime(self.recordTotalTime)
 
-            
+
 
     # TODO turn off some functionality when running macro or stop running 
     # macro

@@ -20,10 +20,11 @@ class KeyListWidgetContainer():
         return self.container.sizeHint()
 
 class KeyListWidgetMacro(KeyListWidgetContainer):
-    def __init__(self, recorder, listWidget, text):
+    def __init__(self, recorder, listWidget, text, steps=None, time=0,
+            keys=None, keyString=''):
         keyEdit = EditLabelKeySequence(recorder, 'Key here')
-        macroWidget = MacroWidget(listWidget, keyEdit)
         editLabel = EditLabelLine(text)
+        macroWidget = MacroWidget(listWidget, keyEdit, editLabel)
         super().__init__(macroWidget)
 
         hLayout = QHBoxLayout()
@@ -36,6 +37,11 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
                 lambda keys: print(keys.toString()))
 
         self._finalizeContainer(hLayout)
+
+        self.container.setSteps(steps)
+        self.container.setTime(time)
+        self.container.setKeys(keys)
+        self.container.setKeyString(keyString)
 
 class KeyListWidgetStep(KeyListWidgetContainer):
     def __init__(self, startTime, stepType, data=None, parent=None):

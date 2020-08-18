@@ -115,6 +115,9 @@ if __name__ == "__main__":
     watcher = KeyWatcher(ui.listWidget, ui.totalTime)
     hotkeyRecorder = Hotkeys(watcher)
     ui.recordButton.toggled.connect(watcher.toggleRecord)
+    ui.backButton.clicked.connect(
+            lambda: ui.listWidget.reloadMacroList(hotkeyRecorder))
+    ui.backButton.clicked.connect(watcher.onBack)
 
     # lmao what is this line
     ui.addButton.clicked.connect(
