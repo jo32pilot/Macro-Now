@@ -15,7 +15,7 @@ from KeyWatcher import KeyWatcher
 from win32gui import PumpMessages
 from KeyListWidget import KeyListWidget
 from Hotkeys import Hotkeys
-
+import util
 
 class Ui_MainWindow(object):
 
@@ -102,9 +102,11 @@ class Ui_MainWindow(object):
 
 import qtresources_rc
 
-
 if __name__ == "__main__":
     import sys
+
+    OUT_FILE = 'macros_file'
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
@@ -123,6 +125,8 @@ if __name__ == "__main__":
     ui.addButton.clicked.connect(
             lambda: ui.listWidget.listWidgetAddEditLabel(
             hotkeyRecorder, 'untitled'))
+
+    ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
     #ui.undoButton.clicked.connect(watcher.runMacro)
     #PumpMessages()
 

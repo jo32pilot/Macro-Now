@@ -48,23 +48,32 @@ class KeyListWidget(QListWidget):
         for step in self.stepContainers:
             self.parsedSteps.append(step.getParsed())
 
-    def backupMacros(self):
+    def getWritable(self):
+        if self.macroList:
+            return list(self.macroList)
+        writable = []
         for container in self.macroWidgets:
             macro = container.getContainer()
             backup = (macro.getMacroName(), macro.getSteps(), macro.getTime(),
                     macro.getKeys(), macro.getKeyString())
-            self.macroList.append(backup)
+            writable.append(backup)
+        return writable
+        
+    def backupMacros(self):
+        self.macroList = self.getWritable()
         self.macroWidgets = []
 
     def reloadMacroList(self, recorder):
         for name, steps, time, keys, keyString in self.macroList:
-            item = QListWidgetItem()
-            container = KeyListWidgetMacro(recorder, self, name, steps,
-                    time, keys, keyString)
-            self.macroWidgets.append(container)
-            self._finalizeItem(item, container)
+            self.reloadMacro(recorder, name, steps, time, keys, keyString)
         self.macroList = []
 
+    def reloadMacro(self, recorder, name, steps, time, keys, keyString):
+        item = QListWidgetItem()
+        container = KeyListWidgetMacro(recorder, self, name, steps,
+                time, keys, keyString)
+        self.macroWidgets.append(container)
+        self._finalizeItem(item, container)
 
     def _finalizeItem(self, item, container):
         item.setSizeHint(container.sizeHint())    
