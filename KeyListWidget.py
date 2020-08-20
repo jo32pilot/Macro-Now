@@ -21,12 +21,19 @@ class KeyListWidget(QListWidget):
         self.parsedSteps = []
         self.keyWatcher = None
         self.currFocusIndex = 0
+        self.loopNum = 0
 
     def setKeyWatcher(self, watcher):
         self.keyWatcher = watcher
     
     def setRecordTotalTime(self, time):
         self.keyWatcher.setRecordTotalTime(time)
+    
+    def getLoopNum(self):
+        return self.loopNum
+
+    def setLoopNum(self, num):
+        self.loopNum = num
 
     def getCurrFocus(self):
         return self.currFocus
@@ -68,7 +75,7 @@ class KeyListWidget(QListWidget):
             if not write and macro is self.currFocus:
                 self.currFocusIndex = idx
             backup = [macro.getMacroName(), macro.getSteps(), macro.getTime(),
-                    macro.getKeys(), macro.getKeyString()]
+                    macro.getKeys(), macro.getKeyString(), macro.getLoopNum()]
             writable.append(backup)
         return writable
         
@@ -77,28 +84,31 @@ class KeyListWidget(QListWidget):
         self.macroWidgets = []
 
     def updateMacroList(self, time):
-        print(self.currFocusIndex)
         currMacro = self.macroList[self.currFocusIndex] 
         # maybe can phase out self.parsedSteps and just use this?
         currMacro[1] = self.parsedSteps
         currMacro[2] = time
 
-
-    def reloadMacro(self, recorder, name, steps, time, keys, keyString):
+    def reloadMacro(self, recorder, name, steps, time, keys, keyString,
+            loopNum):
         item = QListWidgetItem()
         container = KeyListWidgetMacro(recorder, self, name, steps,
-                time, keys, keyString)
+                time, keys, keyString, loopNum)
         self.macroWidgets.append(container)
         self._finalizeItem(item, container)
 
-
-    # TODO when finish recording, need to set steps and time in macroList for curr focus
     def reloadMacroList(self, recorder):
         self.clear()
         self.stepContainers = []
-        for name, steps, time, keys, keyString in self.macroList:
-            self.reloadMacro(recorder, name, steps, time, keys, keyString)
+        for name, steps, time, keys, keyString, loopNum in self.macroList:
+            self.reloadMacro(recorder, name, steps, time, keys, keyString,
+                    loopNum)
         self.macroList = []
+
+    def removeLast(self):
+        del self.stepContainers[-1]
+        self.takeItem(self.count() - 1)
+
 
     def _finalizeItem(self, item, container):
         item.setSizeHint(container.sizeHint())    

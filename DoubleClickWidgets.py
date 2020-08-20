@@ -69,6 +69,7 @@ class EditLabelKeySequence(EditLabel):
         # TODO set these when finish steps recording
         self.steps = None
         self.time = 0
+        self.loopNum = 0
 
     def updateText(self):
         newText = self.editor.keySequence().toString()
@@ -87,10 +88,11 @@ class EditLabelKeySequence(EditLabel):
         # TODO is self.keys dynamically updating if passed into a
         # function like this
         self.recorder.recordHotkey(self.keys, self.steps, self.time,
-                self._finishEditing)
+                self.loopNum, self._finishEditing)
 
 class MacroWidget(QWidget):
-    def __init__(self, listWidget, keyEdit, editLabel, time, parent=None):
+    def __init__(self, listWidget, keyEdit, editLabel, loopSelector,
+            time, parent=None):
         """ 
         
         Args:
@@ -102,6 +104,8 @@ class MacroWidget(QWidget):
         self.listWidget = listWidget
         self.keyEdit = keyEdit
         self.editLabel = editLabel
+        self.loopSelector = loopSelector
+        self.loopSelector.currentTextChanged.connect(self._loopNumChanged)
         self.time = time
 
     def mouseDoubleClickEvent(self, event):
@@ -119,6 +123,21 @@ class MacroWidget(QWidget):
                         holdTime)
             self.listWidget.setParsedSteps(self.getSteps())
             self.listWidget.setRecordTotalTime(self.time)
+            self.listWidget.setLoopNum(self.getLoopNum())
+
+    def _parseLoopNum(self, num):
+        try:
+            return int(num)
+        except ValueError:
+            return -1
+
+    def _loopNumChanged(self, text):
+        num = self._parseLoopNum(text)
+        self.setLoopNum(num)
+        self.listWidget.setLoopNum(num)
+        idx = self.getRecorder().findHotkey(self.getKeys(), recording=False)
+        self.getRecorder().setHotkey(idx, self.getKeys(), self.getSteps(),
+                self.getTime(), num, recording=False)
 
 
     def getSteps(self):
@@ -144,6 +163,12 @@ class MacroWidget(QWidget):
 
     def setTime(self, time):
         self.keyEdit.time = time
+
+    def getLoopNum(self):
+        return self.keyEdit.loopNum
+
+    def setLoopNum(self, num):
+        self.keyEdit.loopNum = num
 
     def getMacroName(self):
         return self.editLabel.getSavedText()

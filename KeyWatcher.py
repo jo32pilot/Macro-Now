@@ -55,11 +55,13 @@ class KeyWatcher():
 
     # TODO this function doesn't need to be here,
     # so we can probably get rid of keywatcher in hotkeys
-    def _runMacro(self, steps, time):
+    def _runMacro(self, steps, time, loopNum):
         # if user hits multiple times, stick in queue and start new thread
         # when last finishes. (if thread is alive, queue.put())
-        runner = MacroRunner(steps, time, self.mouseController, 
-                self.keyController)
+        currFocus = self.listWidget.getCurrFocus()
+        runner = MacroRunner(steps, time, loopNum, self.mouseController, 
+                self.keyController, currFocus.getKeys(),
+                currFocus.getRecorder())
         runner.start()
 
     # TODO might not be the same when rereading
@@ -96,6 +98,8 @@ class KeyWatcher():
             self.listWidget.mouseScroll.disconnect()
             self.listWidget.mouseMove.disconnect()
 
+            self.listWidget.removeLast()
+
             self.recording = False
             self._clearRecordState()
             newTotalTime = time.time() - self.recordStartTime
@@ -112,10 +116,11 @@ class KeyWatcher():
             parsedSteps = self.listWidget.getParsedSteps()
             if idx == -1:
                 recorder.addHotkey(hotkey, parsedSteps, self.recordTotalTime,
-                        recording=False)
+                        self.getLoopNum(), recording=False)
             else:
                 recorder.setHotkey(idx, hotkey, parsedSteps,
-                        self.recordTotalTime, recording=False)
+                        self.recordTotalTime, self.listWidget.getLoopNum(),
+                        recording=False)
             currFocus.setSteps(parsedSteps)
             currFocus.setTime(self.recordTotalTime)
 

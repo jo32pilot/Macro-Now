@@ -136,9 +136,6 @@ if __name__ == "__main__":
     # TODO let user decide how many loops
 
     ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
-    print(hotkeyRecorder.mapper._hotkeys)
-    print(hotkeyRecorder.mapper.is_alive())
-    print(hotkeyRecorder.mapper._hotkeys[0]._keys)
     #ui.undoButton.clicked.connect(watcher.runMacro)
     #PumpMessages()
 

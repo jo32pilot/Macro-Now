@@ -2,17 +2,14 @@ from DoubleClickWidgets import EditLabelLine, EditLabelKey, \
         EditLabelKeySequence, MacroWidget
 from StepConstants import StepEnum, stepImage, stepDescriptor
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QWidget, QLabel, QKeySequenceEdit, QComboBox, \
+        QHBoxLayout
 from util import makeButton
 
 class KeyListWidgetContainer():
     def __init__(self, container):
         self.container = container
 
-    def _finalizeContainer(self, layout):
-        layout.addStretch()
-        self.container.setLayout(layout)
-    
     def getContainer(self):
         return self.container
 
@@ -21,10 +18,13 @@ class KeyListWidgetContainer():
 
 class KeyListWidgetMacro(KeyListWidgetContainer):
     def __init__(self, recorder, listWidget, text, steps=None, time=0,
-            keys=None, keyString=''):
+            keys=None, keyString='', loopNum=0):
         keyEdit = EditLabelKeySequence(recorder, 'Key here')
         editLabel = EditLabelLine(text)
-        macroWidget = MacroWidget(listWidget, keyEdit, editLabel, time)
+        loopText = QLabel("Loop:")
+        loopSelector = QComboBox()
+        macroWidget = MacroWidget(listWidget, keyEdit, editLabel, loopSelector,
+                time)
         super().__init__(macroWidget)
 
         if keys:
@@ -33,16 +33,23 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
             # key to make sure it's non-empty
             keyEdit.getEditor().setKeySequence('C')
 
+        comboItems = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                'Until Hotkey Pressed']
+        loopSelector.addItems(comboItems)
+        print(loopNum)
+        loopSelector.setCurrentIndex(loopNum if loopNum >= 0 else
+                len(comboItems) - 1)
+
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)
         hLayout.addWidget(editLabel.getEditor())
         hLayout.addStretch()
         hLayout.addWidget(keyEdit)
         hLayout.addWidget(keyEdit.getEditor())
-        keyEdit.getEditor().keySequenceChanged.connect(
-                lambda keys: print(keys.toString()))
-
-        self._finalizeContainer(hLayout)
+        hLayout.addStretch()
+        hLayout.addWidget(loopText)
+        hLayout.addWidget(loopSelector)
+        self.container.setLayout(hLayout)
 
         self.container.setSteps(steps)
         self.container.setTime(time)
@@ -76,7 +83,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         hLayout.addWidget(self.startTime)
         hLayout.addWidget(self.startTime.getEditor())
 
-        self._finalizeContainer(hLayout)
+        self.container.setLayout(hLayout)
 
     def getPress(self):
         return self.pressTime
