@@ -101,9 +101,22 @@ class MacroWidget(QWidget):
         self.editLabel = editLabel
 
     def mouseDoubleClickEvent(self, event):
+        # must set curr focus before backup macros to correctly update macroList
         self.listWidget.setCurrFocus(self)
         self.listWidget.backupMacros()
         self.listWidget.clear()
+        finalTime = 0
+        print(self.getSteps())
+        if self.getSteps():
+            for step in self.getSteps():
+                stepType, data, holdTime, startTime = step
+                self.listWidget.listWidgetAddStep(startTime, stepType, data,
+                        holdTime)
+                finalTime = holdTime + startTime
+            self.listWidget.setParsedSteps(self.getSteps())
+            # TODO can get this from macroList
+            self.listWidget.setRecordTotalTime(finalTime)
+
 
     def getSteps(self):
         return self.keyEdit.steps

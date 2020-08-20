@@ -19,7 +19,15 @@ class KeyListWidget(QListWidget):
         self.macroList = []
         self.stepContainers = []
         self.parsedSteps = []
+        self.keyWatcher = None
+        self.currFocusIndex = 0
+
+    def setKeyWatcher(self, watcher):
+        self.keyWatcher = watcher
     
+    def setRecordTotalTime(self, time):
+        self.keyWatcher.setRecordTotalTime(time)
+
     def getCurrFocus(self):
         return self.currFocus
 
@@ -29,16 +37,19 @@ class KeyListWidget(QListWidget):
     def getParsedSteps(self):
         return self.parsedSteps
 
+    def setParsedSteps(self, steps):
+        self.parsedSteps = steps
+
     def listWidgetAddEditLabel(self, recorder, text):
         item = QListWidgetItem()
         container = KeyListWidgetMacro(recorder, self, text)
         self.macroWidgets.append(container)
         self._finalizeItem(item, container)
 
-    def listWidgetAddStep(self, startTime, stepType, data=None):
+    def listWidgetAddStep(self, startTime, stepType, data=None, holdTime=0):
         item = QListWidgetItem()
         container = KeyListWidgetStep(startTime, stepType, data, 
-                parent=self.savedParent)
+                holdTime, parent=self.savedParent)
         self._finalizeItem(item, container)
         self.stepContainers.append(container)
         return container
@@ -48,25 +59,30 @@ class KeyListWidget(QListWidget):
         for step in self.stepContainers:
             self.parsedSteps.append(step.getParsed())
 
-    def getWritable(self):
+    def getMacroList(self, write=False):
         if self.macroList:
             return list(self.macroList)
         writable = []
-        for container in self.macroWidgets:
+        for idx, container in enumerate(self.macroWidgets):
             macro = container.getContainer()
-            backup = (macro.getMacroName(), macro.getSteps(), macro.getTime(),
-                    macro.getKeys(), macro.getKeyString())
+            print(f'macro {id(macro)} currFocus {id(self.currFocus)}\nmacro {macro} currFocus {self.currFocus}')
+            if not write and macro is self.currFocus:
+                self.currFocusIndex = idx
+            backup = [macro.getMacroName(), macro.getSteps(), macro.getTime(),
+                    macro.getKeys(), macro.getKeyString()]
             writable.append(backup)
         return writable
         
     def backupMacros(self):
-        self.macroList = self.getWritable()
+        self.macroList = self.getMacroList()
         self.macroWidgets = []
 
-    def reloadMacroList(self, recorder):
-        for name, steps, time, keys, keyString in self.macroList:
-            self.reloadMacro(recorder, name, steps, time, keys, keyString)
-        self.macroList = []
+    def updateMacroList(self, time):
+        currMacro = self.macroList[self.currFocusIndex] 
+        # maybe can phase out self.parsedSteps and just use this?
+        currMacro[1] = self.parsedSteps
+        currMacro[2] = time
+
 
     def reloadMacro(self, recorder, name, steps, time, keys, keyString):
         item = QListWidgetItem()
@@ -74,6 +90,15 @@ class KeyListWidget(QListWidget):
                 time, keys, keyString)
         self.macroWidgets.append(container)
         self._finalizeItem(item, container)
+
+
+    # TODO when finish recording, need to set steps and time in macroList for curr focus
+    def reloadMacroList(self, recorder):
+        self.clear()
+        self.stepContainers = []
+        for name, steps, time, keys, keyString in self.macroList:
+            self.reloadMacro(recorder, name, steps, time, keys, keyString)
+        self.macroList = []
 
     def _finalizeItem(self, item, container):
         item.setSizeHint(container.sizeHint())    

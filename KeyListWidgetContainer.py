@@ -44,7 +44,7 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
         self.container.setKeyString(keyString)
 
 class KeyListWidgetStep(KeyListWidgetContainer):
-    def __init__(self, startTime, stepType, data=None, parent=None):
+    def __init__(self, startTime, stepType, data=None, holdTime=0, parent=None):
         super().__init__(QWidget())
 
         self.stepType = stepType 
@@ -54,15 +54,14 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         # maybe need to cut precision
         validator = QDoubleValidator()
         validator.setDecimals(2)
-        self.pressTime = EditLabelLine('0')
+        self.pressTime = EditLabelLine(str(holdTime))
         self.pressTime.setValidator(validator)
-        #pressTime.setMinimumWidth()
         self.startTime = EditLabelLine(str(startTime))
         self.startTime.setValidator(validator)
-        #startTime.setMinimumWidth(100)
 
         self.savedParent = parent
 
+        # TODO if reloading after pressing back, need to reparse / set parsedSteps in listWidget?
         hLayout = QHBoxLayout()
         self.editable = self._addStepType(hLayout, stepType, data)
         hLayout.addWidget(self.pressTime)

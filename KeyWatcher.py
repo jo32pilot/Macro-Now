@@ -62,10 +62,14 @@ class KeyWatcher():
                 self.keyController)
         runner.start()
 
+    # TODO might not be the same when rereading
+    def setRecordTotalTime(self, time):
+        self.recordTotalTime = time
+
     def onBack(self):
         # only reset recordTotalTime if no longer on same macro, need to reload
         # this when changing macros
-        self.recordTotalTime = 0
+        self.setRecordTotalTime(0)
 
     # TODO on record start, disconnect other macros
     def toggleRecord(self, record):
@@ -99,6 +103,7 @@ class KeyWatcher():
                     else self.recordTotalTime + newTotalTime)
 
             self.listWidget.parseSteps()
+            self.listWidget.updateMacroList(self.recordTotalTime)
 
             currFocus = self.listWidget.getCurrFocus()
             recorder = currFocus.getRecorder()
