@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QLabel, QWidget, QLineEdit, QKeySequenceEdit
 class EditLabel(QLabel):
     def __init__(self, editor, defaultText='', parent=None):
         super().__init__(defaultText, parent=parent)
+        #self.setStyleSheet('padding-left: 25px')
+        self.setContentsMargins(10, 2, 10, 2)
         self.savedText = defaultText
         self.editor = editor
         self.editor.hide()
@@ -75,6 +77,7 @@ class EditLabelKeySequence(EditLabel):
     def _finishEditing(self, keys):
         self.keys = keys
         self.updateText()
+        self.setStyleSheet('background-color: transparent')
 
     def mouseDoubleClickEvent(self, event):
         self.editor.clear()
@@ -87,7 +90,7 @@ class EditLabelKeySequence(EditLabel):
                 self._finishEditing)
 
 class MacroWidget(QWidget):
-    def __init__(self, listWidget, keyEdit, editLabel, parent=None):
+    def __init__(self, listWidget, keyEdit, editLabel, time, parent=None):
         """ 
         
         Args:
@@ -99,23 +102,23 @@ class MacroWidget(QWidget):
         self.listWidget = listWidget
         self.keyEdit = keyEdit
         self.editLabel = editLabel
+        self.time = time
 
     def mouseDoubleClickEvent(self, event):
+        if not self.keyEdit.getEditor().keySequence():
+            self.keyEdit.setStyleSheet("background-color: #f4c7c3")
+            return
         # must set curr focus before backup macros to correctly update macroList
         self.listWidget.setCurrFocus(self)
         self.listWidget.backupMacros()
         self.listWidget.clear()
-        finalTime = 0
-        print(self.getSteps())
         if self.getSteps():
             for step in self.getSteps():
                 stepType, data, holdTime, startTime = step
                 self.listWidget.listWidgetAddStep(startTime, stepType, data,
                         holdTime)
-                finalTime = holdTime + startTime
             self.listWidget.setParsedSteps(self.getSteps())
-            # TODO can get this from macroList
-            self.listWidget.setRecordTotalTime(finalTime)
+            self.listWidget.setRecordTotalTime(self.time)
 
 
     def getSteps(self):

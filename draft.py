@@ -119,6 +119,8 @@ if __name__ == "__main__":
 
     ui.listWidget.setKeyWatcher(watcher)
 
+    util.read(OUT_FILE, ui.listWidget, hotkeyRecorder)
+
     ui.recordButton.toggled.connect(watcher.toggleRecord)
     ui.backButton.clicked.connect(
             lambda: ui.listWidget.reloadMacroList(hotkeyRecorder))
@@ -129,7 +131,14 @@ if __name__ == "__main__":
             lambda: ui.listWidget.listWidgetAddEditLabel(
             hotkeyRecorder, 'untitled'))
 
+    # TODO eiterh don't listen for hotkeys when macro is running or check if
+    # key press is from macro recorder
+    # TODO let user decide how many loops
+
     ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
+    print(hotkeyRecorder.mapper._hotkeys)
+    print(hotkeyRecorder.mapper.is_alive())
+    print(hotkeyRecorder.mapper._hotkeys[0]._keys)
     #ui.undoButton.clicked.connect(watcher.runMacro)
     #PumpMessages()
 

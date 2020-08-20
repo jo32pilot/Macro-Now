@@ -34,6 +34,7 @@ class Hotkeys():
             self.hotkeyRecorder.start()
 
     def onPressRecordHotkey(self, key):
+        key = self.hotkeyRecorder.canonical(key)
         self.currRecordSet.add(key)
         for mapping in self.savedHotkeys:
             conflicting = self.currRecordSet.issubset(mapping._keys) \
@@ -51,7 +52,6 @@ class Hotkeys():
         self.mapper._hotkeys = self.savedHotkeys + self.mapper._hotkeys
         self.updater = lambda: None
 
-    # TODO combine bottom three
     def onReleaseRecordHotkey(self, original=None):
         # TODO need to stop editing
         if original:
@@ -68,22 +68,6 @@ class Hotkeys():
                     self.currTotalTime)
         self.updater(self.currRecordSet)
         self._finishRecording()
-
-    # on user begin edit key sequence
-    # set mappper hot keys to empty temporarily
-    #
-    # don't need to replace listener, just create a new one and stop it when 
-    # needed
-    #
-    # on key press
-    # if key sequence set found is subset of another set in mapper
-    #   highlight red with existing map even if one contains more keys than the
-    #   other
-    #
-    # on key release
-    # stop editing, add hotkey (behavior undefined if red)
-    #
-    # need to make own display
 
     def addHotkey(self, keys, steps=None, totalTime=0, recording=True):
         # each macro widget will have the step data to pass in and total time

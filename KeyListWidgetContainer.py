@@ -24,8 +24,14 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
             keys=None, keyString=''):
         keyEdit = EditLabelKeySequence(recorder, 'Key here')
         editLabel = EditLabelLine(text)
-        macroWidget = MacroWidget(listWidget, keyEdit, editLabel)
+        macroWidget = MacroWidget(listWidget, keyEdit, editLabel, time)
         super().__init__(macroWidget)
+
+        if keys:
+            # As long as hotkey exists, make sure key sequence
+            # is non-empty. There's no meaning behing 'C'. Any
+            # key to make sure it's non-empty
+            keyEdit.getEditor().setKeySequence('C')
 
         hLayout = QHBoxLayout()
         hLayout.addWidget(editLabel)

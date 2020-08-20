@@ -65,7 +65,6 @@ class KeyListWidget(QListWidget):
         writable = []
         for idx, container in enumerate(self.macroWidgets):
             macro = container.getContainer()
-            print(f'macro {id(macro)} currFocus {id(self.currFocus)}\nmacro {macro} currFocus {self.currFocus}')
             if not write and macro is self.currFocus:
                 self.currFocusIndex = idx
             backup = [macro.getMacroName(), macro.getSteps(), macro.getTime(),
@@ -78,6 +77,7 @@ class KeyListWidget(QListWidget):
         self.macroWidgets = []
 
     def updateMacroList(self, time):
+        print(self.currFocusIndex)
         currMacro = self.macroList[self.currFocusIndex] 
         # maybe can phase out self.parsedSteps and just use this?
         currMacro[1] = self.parsedSteps
