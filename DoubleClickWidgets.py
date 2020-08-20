@@ -59,14 +59,15 @@ class EditLabelKey(EditLabel):
         self._beginEdit()
 
 class EditLabelKeySequence(EditLabel):
+
+    recording = False
+
     # TODO param for existing keys
     def __init__(self, recorder, defaultText='', parent=None):
         super().__init__(QKeySequenceEdit(), defaultText=defaultText,
                 parent=parent)
         self.recorder = recorder
-        # TODO set this when finish hotkey recording
         self.keys = None
-        # TODO set these when finish steps recording
         self.steps = None
         self.time = 0
         self.loopNum = 0
@@ -81,12 +82,11 @@ class EditLabelKeySequence(EditLabel):
         self.setStyleSheet('background-color: transparent')
 
     def mouseDoubleClickEvent(self, event):
+        if EditLabelKeySequence.recording:
+            return
+        EditLabelKeySequence.recording = True
         self.editor.clear()
         self._beginEdit()
-        # TODO set variables / display through recordHotKey
-        # either by passing in self or passing in function
-        # TODO is self.keys dynamically updating if passed into a
-        # function like this
         self.recorder.recordHotkey(self.keys, self.steps, self.time,
                 self.loopNum, self._finishEditing)
 

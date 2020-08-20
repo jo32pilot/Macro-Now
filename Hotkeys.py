@@ -1,3 +1,4 @@
+from DoubleClickWidgets import EditLabelKeySequence
 from pynput import keyboard
 from pynput.keyboard import HotKey
 
@@ -52,6 +53,7 @@ class Hotkeys():
         self.hotkeyRecorder.stop()
         self.mapper._hotkeys = self.savedHotkeys + self.mapper._hotkeys
         self.updater = lambda: None
+        EditLabelKeySequence.recording = False
 
     def onReleaseRecordHotkey(self, original=None):
         # TODO need to stop editing
