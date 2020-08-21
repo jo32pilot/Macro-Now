@@ -105,16 +105,17 @@ class KeyListWidgetStep(KeyListWidgetContainer):
                 where type_data depends on what step_type is. For each of the
                 following step types, we have the following data:
 
-                ACTIVE_WAIT:  (None)   No data
-                MOUSE_LEFT:   (Tuple)  Coordinates of the mouse click
-                MOUSE_RIGHT:  (Tuple)  Coordinates of the mouse click
-                MOUSE_SCROLL: (int)    Y direction scroll offset
-                MOUSE_MOVE:   (Tuple)  Tuple containing the two tuples. 
-                                       The first tuple contains the coordinates
-                                       of the mouse before movement.
-                                       The second tuple contains the coordinates
-                                       where the mouse stopped.
-                KEY:          (String) The key clicked
+                ACTIVE_WAIT:       (None)   No data
+                MOUSE_LEFT /
+                MOUSE_RIGHT:       (Tuple)  Coordinates of the mouse click
+                MOUSE_SCROLL:      (int)    Y direction scroll offset
+                MOUSE_LEFT_DRAG /   
+                MOUSE_RIGHT_DRAG   (Tuple)  Tuple containing the two tuples. 
+                                            The first tuple contains the coordinates
+                                            of the mouse before movement.
+                                            The second tuple contains the coordinates
+                                            where the mouse stopped.
+                KEY:               (String) The key clicked
 
 
         '''
@@ -131,7 +132,8 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         elif self.stepType == StepEnum.MOUSE_SCROLL:
             data = valueAt(1)
 
-        elif self.stepType == StepEnum.MOUSE_MOVE:
+        elif self.stepType == StepEnum.MOUSE_LEFT_DRAG or \
+                self.stepType == StepEnum.MOUSE_RIGHT_DRAG:
             start = (valueAt(1), valueAt(4))
             end = (valueAt(9), valueAt(12))
             data = (start, end)
@@ -152,8 +154,9 @@ class KeyListWidgetStep(KeyListWidgetContainer):
             self._removeWidget(1, layout)
 
     def _changeButton(self, newType, origButton, typeButtonLayout, 
-            parentLayout):
-        self._removeButtons(len(StepEnum) - 1, typeButtonLayout)
+            parentLayout, manualEdit=True):
+        if manualEdit:
+            self._removeButtons(len(StepEnum) - 1, typeButtonLayout)
         origButton.clicked.disconnect()
         newImage = stepImage(newType)
         origButton.setStyleSheet(newImage)
@@ -161,9 +164,10 @@ class KeyListWidgetStep(KeyListWidgetContainer):
                 origButton, typeButtonLayout, parentLayout))
 
     def _changeType(self, oldType, newType, origButton, typeButtonLayout, 
-            parentLayout):
+            parentLayout, data=None, manualEdit=True):
         # replace button image and event handler, and remove extra buttons
-        self._changeButton(newType, origButton, typeButtonLayout, parentLayout)
+        self._changeButton(newType, origButton, typeButtonLayout, parentLayout,
+                manualEdit=manualEdit)
 
         # change type descrption
         parentLayout.itemAt(1).widget().setText(stepDescriptor(newType))
@@ -175,11 +179,23 @@ class KeyListWidgetStep(KeyListWidgetContainer):
                 or newType == StepEnum.MOUSE_RIGHT)
 
         if not (oldIsClick and newIsClick):
-            data = (0, 0) if newIsClick else None
+            data = (0, 0) if newIsClick else data
             # index 2 is a spacer
             self._removeWidget(3, parentLayout)
             newWidget = self._getValueWidget(newType, data)[0]
             parentLayout.insertWidget(3, newWidget)
+
+        self.stepType = newType
+
+    def clickToDrag(self, stepType, oldCoords, newCoords):
+        hLayout = self.container.layout()
+        typeButtonLayout = hLayout.itemAt(0).layout()
+        origButton = typeButtonLayout.itemAt(0).widget()
+        newType = StepEnum.MOUSE_LEFT_DRAG if stepType == StepEnum.MOUSE_LEFT \
+                else StepEnum.MOUSE_RIGHT_DRAG
+        self._changeType(stepType, newType, origButton, typeButtonLayout,
+                hLayout, (oldCoords, newCoords), manualEdit=False)
+
 
     def _insertOptions(self, currType, origButton, typeButtonLayout,
             parentLayout):
@@ -238,7 +254,8 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         if stepType == StepEnum.MOUSE_LEFT or stepType == StepEnum.MOUSE_RIGHT:
             self._makeCoordText(containerLayout, str(data[0]), str(data[1]))
 
-        elif stepType == StepEnum.MOUSE_MOVE:
+        elif stepType == StepEnum.MOUSE_LEFT_DRAG or \
+                stepType == StepEnum.MOUSE_RIGHT_DRAG:
             self._makeCoordText(containerLayout, str(data[0][0]), 
                     str(data[0][1]))
             containerLayout.addWidget(QLabel(' -> '))

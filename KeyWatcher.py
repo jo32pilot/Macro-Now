@@ -36,13 +36,13 @@ class KeyWatcher():
         self.clickEvent = ClickEvent(listWidget, self.keysDown, self.lock)
         self.waitEvent = WaitEvent(listWidget, self.keysDown, self.lock)
         self.scrollEvent = ScrollEvent(0, listWidget, self.keysDown, self.lock)
-        self.moveEvent = MoveEvent(self.mouseController.position, listWidget, 
-                self.keysDown, self.lock)
+        #self.moveEvent = MoveEvent(self.mouseController.position, listWidget, 
+        #        self.keysDown, self.lock)
 
         self.keyboard = keyboard.Listener(on_press=self.onPressEmit, 
                 on_release=self.onReleaseEmit)
         self.mouse = mouse.Listener(on_click=self.onClickEmit,
-                on_move=self.onMouseMoveEmit,
+                #on_move=self.onMouseMoveEmit,
                 on_scroll=self.onScrollEmit)
 
         self.keyboard.start()
@@ -55,7 +55,6 @@ class KeyWatcher():
     def _runMacro(self, steps, time, loopNum):
         # if user hits multiple times, stick in queue and start new thread
         # when last finishes. (if thread is alive, queue.put())
-        print('_runMacro')
         currFocus = self.listWidget.getCurrFocus()
         runner = MacroRunner(steps, time, loopNum, self.mouseController, 
                 self.keyController, currFocus.getKeys(), currFocus.getRecorder())
@@ -73,14 +72,14 @@ class KeyWatcher():
     def toggleRecord(self, record):
         if record:
             self.scrollEvent.reset(0)
-            self.moveEvent.reset(self.mouseController.position)
+            #self.moveEvent.reset(self.mouseController.position)
 
             self.listWidget.keyPress.connect(self.keyboardEvent.onPress)
             self.listWidget.keyRelease.connect(self.keyboardEvent.onRelease)
             self.listWidget.mousePress.connect(self.clickEvent.onClick)
             self.listWidget.wait.connect(self.waitEvent.onWait)
             self.listWidget.mouseScroll.connect(self.scrollEvent.onScroll)
-            self.listWidget.mouseMove.connect(self.moveEvent.onMove)
+            #self.listWidget.mouseMove.connect(self.moveEvent.onMove)
             self.listWidget.getCurrFocus().getRecorder().backupHotkeys()
 
             self.recordStartTime = time.time()
@@ -93,7 +92,7 @@ class KeyWatcher():
             self.listWidget.mousePress.disconnect()
             self.listWidget.wait.disconnect()
             self.listWidget.mouseScroll.disconnect()
-            self.listWidget.mouseMove.disconnect()
+            #self.listWidget.mouseMove.disconnect()
 
             currFocus = self.listWidget.getCurrFocus()
             recorder = currFocus.getRecorder()
@@ -111,12 +110,8 @@ class KeyWatcher():
             self.listWidget.updateMacroList(self.recordTotalTime)
 
             hotkey = currFocus.getKeys()
-            print(hotkey)
             idx = recorder.findHotkey(hotkey, recording=False)
             parsedSteps = self.listWidget.getParsedSteps()
-            print(idx)
-            print(recorder.mapper._hotkeys)
-            print(recorder.mapper._hotkeys[0]._keys)
             if idx == -1:
                 recorder.addHotkey(hotkey, parsedSteps, self.recordTotalTime,
                         self.getLoopNum(), recording=False)
@@ -124,7 +119,6 @@ class KeyWatcher():
                 recorder.setHotkey(idx, hotkey, parsedSteps,
                         self.recordTotalTime, self.listWidget.getLoopNum(),
                         recording=False)
-            print(recorder.mapper._hotkeys[0]._on_activate)
             currFocus.setSteps(parsedSteps)
             currFocus.setTime(self.recordTotalTime)
 
@@ -164,7 +158,7 @@ class KeyWatcher():
     @synchronize
     def _updateTime(self):
         for key, timeTup in self.keysDown.items():
-            if not (key == StepEnum.MOUSE_MOVE or key == StepEnum.MOUSE_SCROLL):
+            if not key == StepEnum.MOUSE_SCROLL:
                 timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
 
     def _update(self):
@@ -172,8 +166,8 @@ class KeyWatcher():
             self.startTime = time.time() - self.recordStartTime + self.recordTotalTime
             if StepEnum.MOUSE_SCROLL in self.keysDown:
                 self.scrollEvent.update()
-            if StepEnum.MOUSE_MOVE in self.keysDown:
-                self.moveEvent.update()
+            #if StepEnum.MOUSE_MOVE in self.keysDown:
+            #    self.moveEvent.update()
             self.onWaitEmit()
             self._updateTime()
             time.sleep(.1)

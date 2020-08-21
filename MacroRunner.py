@@ -76,10 +76,15 @@ class MacroRunner(Thread):
                             mouse.scroll(0, scrollDir)
                             currScrollTick = 1
 
-                        elif stepType == StepEnum.MOUSE_MOVE:
-                            start, end = data
-                            x, y = start
+                        elif stepType == StepEnum.MOUSE_LEFT_DRAG:
+                            x, y = data[0]
                             mouse.position = (int(x), int(y))
+                            mouse.press(Button.left)
+
+                        elif stepType == StepEnum.MOUSE_RIGHT_DRAG:
+                            x, y = data[0]
+                            mouse.position = (int(x), int(y))
+                            mouse.press(Button.right)
 
                         elif stepType == StepEnum.KEY:
                             key = data if len(data) == 1 else keyConst(data)
@@ -117,15 +122,25 @@ class MacroRunner(Thread):
                         mouse.release(Button.left)
                     elif topStepType == StepEnum.MOUSE_RIGHT:
                         mouse.release(Button.right)
+
                     elif topStepType == StepEnum.MOUSE_SCROLL:
                         # only need to set scrolling to False because
                         # next time scrolling is set to True, all other
                         # relavent variables will be set to new values
                         scrolling = False
-                    elif topStepType == StepEnum.MOUSE_MOVE:
+
+                    elif topStepType == StepEnum.MOUSE_LEFT_DRAG:
                         start, end = topData
                         x, y = end
                         mouse.position = (int(x), int(y))
+                        mouse.release(Button.left)
+                        print('released')
+                    elif topStepType == StepEnum.MOUSE_RIGHT_DRAG:
+                        start, end = topData
+                        x, y = end
+                        mouse.position = (int(x), int(y))
+                        mouse.release(Button.right)
+
                     elif topStepType == StepEnum.KEY:
                         key = topData if len(topData) == 1 else keyConst(topData)
                         keyboard.release(key)
@@ -135,12 +150,8 @@ class MacroRunner(Thread):
                 # sleep for cpu
                 time.sleep(.01)
 
-        print(pq.queue)
-
         if resetHotkey:
             idx = recorder.findHotkey(keys, recording=False)
             recorder.setHotkey(idx, keys, steps, totalTime, loopNum, recording=False)
         recorder.reloadHotkeys()
-        hk = recorder.mapper._hotkeys[0]
-        print(f'hotkey: {hk._keys} func: {hk._on_activate}')
 

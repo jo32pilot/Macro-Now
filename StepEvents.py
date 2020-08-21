@@ -40,15 +40,25 @@ class KeyboardEvent(StepEvent):
         self._dictDel(key)
 
 class ClickEvent(StepEvent):
+    def __init__(self, listWidget, keysDown, lock):
+        super().__init__(listWidget, keysDown, lock)
+        self.dataCache = {StepEnum.MOUSE_LEFT: None, StepEnum.MOUSE_RIGHT: None}
+
     def onClick(self, startTime, x, y, button, pressed):
         stepType = StepEnum.MOUSE_LEFT if button == mouse.Button.left else \
                 StepEnum.MOUSE_RIGHT
         if pressed:
-            press = self.listWidget.listWidgetAddStep(
-                    startTime, stepType, (x, y)).getPress()
+            container = self.listWidget.listWidgetAddStep(
+                    startTime, stepType, (x, y))
+            press = container.getPress()
             self._dictAdd(button, (press, time.time()))
+            self.dataCache[stepType] = (container, x, y)
         else:
             self._dictDel(button)
+            # If user dragged mouse, update container
+            container, oldX, oldY = self.dataCache[stepType]
+            if oldX != x or oldY != y:
+                container.clickToDrag(stepType, (oldX, oldY), (x, y))
 
 class WaitEvent(StepEvent):
     def onWait(self, startTime):

@@ -6,8 +6,10 @@ class StepEnum(Enum):
     MOUSE_LEFT = 1
     MOUSE_RIGHT = 2
     MOUSE_SCROLL = 3
-    MOUSE_MOVE = 4
-    KEY = 5
+    #MOUSE_MOVE = 4
+    MOUSE_LEFT_DRAG = 4
+    MOUSE_RIGHT_DRAG = 5
+    KEY = 6
 
     def __lt__(self, other):
         return self.value < other.value
@@ -18,7 +20,9 @@ _ENUM_CONST = {
     StepEnum.MOUSE_LEFT: ('image: url(:/images/images/leftclick.png);\npadding:3px;', 'Mouse Left Click'),
     StepEnum.MOUSE_RIGHT: ('image: url(:/images/images/rightclick.png);\npadding:3px;', 'Mouse Right Click'),
     StepEnum.MOUSE_SCROLL: ('image: url(:/images/images/scroll.png);\npadding:3px;', 'Mouse Scroll'),
-    StepEnum.MOUSE_MOVE: ('image: url(:/images/images/move.png);\npadding:3px;', 'Mouse Move'),
+    #StepEnum.MOUSE_MOVE: ('image: url(:/images/images/move.png);\npadding:3px;', 'Mouse Move'),
+    StepEnum.MOUSE_LEFT_DRAG: ('image: url(:/images/images/left_drag.png);\npadding:3px;', 'Mouse Left Drag'),
+    StepEnum.MOUSE_RIGHT_DRAG: ('image: url(:/images/images/right_drag.png);\npadding:3px;', 'Mouse Right Drag'),
     StepEnum.KEY: ('image: url(:/images/images/keyboard.png);\npadding:3px;', 'Key Press'),
 }
 

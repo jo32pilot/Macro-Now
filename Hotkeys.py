@@ -24,14 +24,12 @@ class Hotkeys():
     def backupHotkeys(self):
         self.savedHotkeys = self.mapper._hotkeys
         self.mapper._hotkeys = []
-        print('backedup')
 
     def reloadHotkeys(self):
         for hotkey in self.savedHotkeys:
             hotkey._state = set()
         self.mapper._hotkeys = self.savedHotkeys
         self.savedHotkeys = None
-        print('reloaded')
 
     '''
     def createNew(self):
