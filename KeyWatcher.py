@@ -1,5 +1,4 @@
-from StepEvents import KeyboardEvent, ClickEvent, WaitEvent, ScrollEvent, \
-        MoveEvent
+from StepEvents import KeyboardEvent, ClickEvent, WaitEvent, ScrollEvent
 from win32gui import PostQuitMessage
 from StepConstants import StepEnum
 from pynput import mouse, keyboard
@@ -52,12 +51,11 @@ class KeyWatcher():
     def _clearRecordState(self):
         self.keysDown.clear()
 
-    def _runMacro(self, steps, time, loopNum):
+    def _runMacro(self, steps, time, loopNum, keys, recorder):
         # if user hits multiple times, stick in queue and start new thread
         # when last finishes. (if thread is alive, queue.put())
-        currFocus = self.listWidget.getCurrFocus()
         runner = MacroRunner(steps, time, loopNum, self.mouseController, 
-                self.keyController, currFocus.getKeys(), currFocus.getRecorder())
+                self.keyController, keys, recorder)
         runner.start()
 
     def setRecordTotalTime(self, time):
@@ -166,8 +164,6 @@ class KeyWatcher():
             self.startTime = time.time() - self.recordStartTime + self.recordTotalTime
             if StepEnum.MOUSE_SCROLL in self.keysDown:
                 self.scrollEvent.update()
-            #if StepEnum.MOUSE_MOVE in self.keysDown:
-            #    self.moveEvent.update()
             self.onWaitEmit()
             self._updateTime()
             time.sleep(.1)

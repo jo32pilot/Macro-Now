@@ -17,7 +17,6 @@ class StepEvent():
     def _dictDel(self, key):
         timeTup = self.keysDown.get(key, None)
         if timeTup != None:
-            timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
             del self.keysDown[key]
 
 
@@ -99,7 +98,7 @@ class ReleaselessEvent(StepEvent):
             else:
                 self.data = data
             self.stopStart = time.time()
-            self.check = True
+        self.check = True
 
     def _update(self, stepType, updateFunc, reset=False):
         # TODO make configurable
@@ -112,11 +111,16 @@ class ReleaselessEvent(StepEvent):
         elif not self.check:
             self.stopDelta = time.time() - self.stopStart
         elif self.check:
+            print('update tim')
             updateFunc()
             timeTup = self.keysDown[stepType]
             timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
             self.check = False
 
+# Why not merge ReleaselessEvent into scroll event and avoid needless
+# inheritance? Because there previously was a mouse move event which also needed
+# the functionality of ReleaselessEvent. It was removed in favor of mouse click
+# drags but may be reimplemented in the future.
 class ScrollEvent(ReleaselessEvent):
     def onScroll(self, startTime, x, y, dx, dy):
         self._onEvent(startTime, StepEnum.MOUSE_SCROLL, dy, increment=True)
@@ -127,16 +131,3 @@ class ScrollEvent(ReleaselessEvent):
     def update(self):
         self._update(StepEnum.MOUSE_SCROLL, self._updateText, reset=True)
 
-class MoveEvent(ReleaselessEvent):
-    def onMove(self, startTime, x, y):
-        coords = (x, y)
-        self._onEvent(startTime, StepEnum.MOUSE_MOVE, coords)
-
-    def _updateText(self):
-        x, y = self.data
-        self.endPosWidget[0].setText(str(x))
-        self.endPosWidget[1].setText(str(y))
-
-    def update(self):
-        self._update(StepEnum.MOUSE_MOVE, self._updateText)
-    

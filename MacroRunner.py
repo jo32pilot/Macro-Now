@@ -17,6 +17,8 @@ class MacroRunner(Thread):
         self.loopInf = False
 
     def runMacro(self, steps, totalTime, loopNum, mouse, keyboard, keys, recorder):
+        print(f'loop : {loopNum}')
+
         # If -1, stop only when user re-presses hotkey
         resetHotkey = False
 
@@ -29,7 +31,7 @@ class MacroRunner(Thread):
 
         loopTrack = loopNum
 
-        while self.loopInf or loopTrack >= 0:
+        while self.loopInf or loopTrack > 0:
             loopTrack -= 1
             runStart = time.time()
 

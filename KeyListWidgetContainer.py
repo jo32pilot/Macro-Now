@@ -33,11 +33,10 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
             # key to make sure it's non-empty
             keyEdit.getEditor().setKeySequence('C')
 
-        comboItems = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        comboItems = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 
                 'Until Hotkey Pressed']
         loopSelector.addItems(comboItems)
-        print(loopNum)
-        loopSelector.setCurrentIndex(loopNum if loopNum >= 0 else
+        loopSelector.setCurrentIndex(loopNum - 1 if loopNum > 0 else
                 len(comboItems) - 1)
 
         hLayout = QHBoxLayout()

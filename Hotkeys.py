@@ -107,7 +107,7 @@ class Hotkeys():
         # each macro widget will have the step data to pass in and total time
         # may need more parsing logic for hotkey
         addTo = self.savedHotkeys if recording else self.mapper._hotkeys
-        func = (lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum)) \
+        func = (lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum, keys, self)) \
                 if steps and totalTime else (lambda: print(f'{keys} added'))
         hotkey = HotKey(keys, func)
         addTo.append(hotkey)
@@ -136,7 +136,7 @@ class Hotkeys():
             print('Tried to set at -1 -> hotkey doesn\'t exist')
             return
         addTo = self.savedHotkeys if recording else self.mapper._hotkeys
-        func = (lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum)) \
+        func = (lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum, keys, self)) \
                 if steps and totalTime else (lambda: print(f'{keys} set'))
         hotkey = HotKey(keys, func)
         addTo[idx] = hotkey

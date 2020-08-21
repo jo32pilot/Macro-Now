@@ -26,27 +26,27 @@ def read(filename, listWidget, recorder):
         # when optimizing, remember to open in binary mode for carriadge returns
         with open(filename, 'r') as toLoad:
             for line in toLoad:
-                name, steps, time, keys, keyString = line.split('\0\0\0')
+                name, steps, time, keys, keyString, loopNum = line.split('\0\0\0')
                 steps = _readSteps(steps)
                 keys = _readKeys(keys)
                 time = float(time)
+                loopNum = int(loopNum)
                 listWidget.reloadMacro(recorder, name, steps, time,
-                        keys, keyString)
-                recorder.addHotkey(keys, steps, time, recording=False)
+                        keys, keyString, loopNum)
+                recorder.addHotkey(keys, steps, time, loopNum, recording=False)
 
 def write(filename, listWidget):
-    print('beginnint write')
+    print('beginning write')
     # maybe write to multiple files for each macro?
     with open(filename, 'w') as out:
         writable = listWidget.getMacroList(write=True)
+        # Output buffer
         lines = []
         for toWrite in writable:
-            name, steps, time, keys, keyString = toWrite
+            name, steps, time, keys, keyString, loopNum = toWrite
             steps = _serializeSteps(steps) if steps else steps
-            print(keys)
             keys = '\0'.join(map(lambda key: str(key), keys))
-            print(keys)
-            lines.append(f'{name}\0\0\0{steps}\0\0\0{time}\0\0\0{keys}\0\0\0{keyString}')
+            lines.append(f'{name}\0\0\0{steps}\0\0\0{time}\0\0\0{keys}\0\0\0{keyString}\0\0\0{loopNum}\n')
         out.writelines(lines)
 
 def _serializeSteps(steps):
@@ -67,8 +67,9 @@ def _parseData(stepType, dataStr):
         x, y = dataStr.split(', ')
         data = (float(x[1:]), float(y[:-1]))
     elif stepType == StepEnum.MOUSE_SCROLL:
-        data = int(data)
-    elif stepType == StepEnum.MOUSE_MOVE:
+        data = float(data)
+    elif stepType == StepEnum.MOUSE_LEFT_DRAG or \
+            stepType == StepEnum.MOUSE_RIGHT_DRAG:
         startX, startY, endX, endY = dataStr.split(', ')
         # remove parenthesis
         startX = startX[2:]
