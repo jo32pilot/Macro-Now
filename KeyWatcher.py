@@ -52,19 +52,15 @@ class KeyWatcher():
     def _clearRecordState(self):
         self.keysDown.clear()
 
-
-    # TODO this function doesn't need to be here,
-    # so we can probably get rid of keywatcher in hotkeys
     def _runMacro(self, steps, time, loopNum):
         # if user hits multiple times, stick in queue and start new thread
         # when last finishes. (if thread is alive, queue.put())
+        print('_runMacro')
         currFocus = self.listWidget.getCurrFocus()
         runner = MacroRunner(steps, time, loopNum, self.mouseController, 
-                self.keyController, currFocus.getKeys(),
-                currFocus.getRecorder())
+                self.keyController, currFocus.getKeys(), currFocus.getRecorder())
         runner.start()
 
-    # TODO might not be the same when rereading
     def setRecordTotalTime(self, time):
         self.recordTotalTime = time
 
@@ -85,6 +81,7 @@ class KeyWatcher():
             self.listWidget.wait.connect(self.waitEvent.onWait)
             self.listWidget.mouseScroll.connect(self.scrollEvent.onScroll)
             self.listWidget.mouseMove.connect(self.moveEvent.onMove)
+            self.listWidget.getCurrFocus().getRecorder().backupHotkeys()
 
             self.recordStartTime = time.time()
             self.recording = True
@@ -98,6 +95,10 @@ class KeyWatcher():
             self.listWidget.mouseScroll.disconnect()
             self.listWidget.mouseMove.disconnect()
 
+            currFocus = self.listWidget.getCurrFocus()
+            recorder = currFocus.getRecorder()
+            recorder.reloadHotkeys()
+
             self.listWidget.removeLast()
 
             self.recording = False
@@ -109,11 +110,13 @@ class KeyWatcher():
             self.listWidget.parseSteps()
             self.listWidget.updateMacroList(self.recordTotalTime)
 
-            currFocus = self.listWidget.getCurrFocus()
-            recorder = currFocus.getRecorder()
             hotkey = currFocus.getKeys()
+            print(hotkey)
             idx = recorder.findHotkey(hotkey, recording=False)
             parsedSteps = self.listWidget.getParsedSteps()
+            print(idx)
+            print(recorder.mapper._hotkeys)
+            print(recorder.mapper._hotkeys[0]._keys)
             if idx == -1:
                 recorder.addHotkey(hotkey, parsedSteps, self.recordTotalTime,
                         self.getLoopNum(), recording=False)
@@ -121,6 +124,7 @@ class KeyWatcher():
                 recorder.setHotkey(idx, hotkey, parsedSteps,
                         self.recordTotalTime, self.listWidget.getLoopNum(),
                         recording=False)
+            print(recorder.mapper._hotkeys[0]._on_activate)
             currFocus.setSteps(parsedSteps)
             currFocus.setTime(self.recordTotalTime)
 
@@ -174,8 +178,7 @@ class KeyWatcher():
             self._updateTime()
             time.sleep(.1)
 
-    #TODO do I still even need this?
     def shutdown(self):
         PostQuitMessage(0)
-        self.hm.UnhookKeyboard()
+        # stop relavent threads?
 

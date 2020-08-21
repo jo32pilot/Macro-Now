@@ -17,9 +17,10 @@ class MacroRunner(Thread):
         self.loopInf = False
 
     def runMacro(self, steps, totalTime, loopNum, mouse, keyboard, keys, recorder):
-        print(loopNum)
-        # If -1, stop only when user represses hotkey
+        # If -1, stop only when user re-presses hotkey
         resetHotkey = False
+
+        recorder.backupHotkeys()
         if loopNum == -1:
             recorder.setMacroToggle(keys, self._finishLoop)
             resetHotkey = True
@@ -29,8 +30,6 @@ class MacroRunner(Thread):
         loopTrack = loopNum
 
         while self.loopInf or loopTrack >= 0:
-            print(self.loopInf)
-            print(loopTrack)
             loopTrack -= 1
             runStart = time.time()
 
@@ -139,4 +138,7 @@ class MacroRunner(Thread):
         if resetHotkey:
             idx = recorder.findHotkey(keys, recording=False)
             recorder.setHotkey(idx, keys, steps, totalTime, loopNum, recording=False)
+        recorder.reloadHotkeys()
+        hk = recorder.mapper._hotkeys[0]
+        print(f'hotkey: {hk._keys} func: {hk._on_activate}')
 

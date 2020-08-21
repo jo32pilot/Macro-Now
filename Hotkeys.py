@@ -15,6 +15,14 @@ class Hotkeys():
 
         self.mapper.start()
 
+    def backupHotkeys(self):
+        self.savedHotkeys = self.mapper._hotkeys
+        self.mapper._hotkeys = []
+
+    def reloadHotkeys(self):
+        self.mapper._hotkeys = self.savedHotkeys
+        self.savedHotkeys = None
+
     def recordHotkey(self, original=None, steps=None, totalTime=0, loopNum=0,
             updater=lambda: None):
         # TODO add param keys, if keys not none, then there was already a hotkey
@@ -25,7 +33,6 @@ class Hotkeys():
         self.currTotalTime = totalTime
         self.savedHotkeys = self.mapper._hotkeys
         self.loopNum = loopNum
-        print(f'saved: {self.savedHotkeys} mapper: {self.mapper._hotkeys}')
         self.mapper._hotkeys = []
         self.updater = updater
         if not self.hotkeyRecorder or not self.hotkeyRecorder.is_alive():
@@ -94,7 +101,6 @@ class Hotkeys():
 
         """
         findIn = self.savedHotkeys if recording else self.mapper._hotkeys
-        keys = keys
         for idx, mapping in enumerate(findIn):
             if keys == set(mapping._keys):
                 return idx
@@ -102,7 +108,6 @@ class Hotkeys():
 
     def setHotkey(self, idx, keys, steps=None, totalTime=0, loopNum=0,
             recording=True):
-        # TODO case should never hapen, log just in case
         if idx < 0:
             print('Tried to set at -1 -> hotkey doesn\'t exist')
             return
@@ -112,9 +117,14 @@ class Hotkeys():
         hotkey = HotKey(keys, func)
         addTo[idx] = hotkey
 
-    def setMacroToggle(self, keys, toggleFunc):
-        idx = self.findHotkey(keys, recording=False)
-        hotkey = HotKey(keys, toggleFunc)
-        self.mapper._hotkeys[idx] = hotkey
+    def getHotkey(self, idx, recording=True):
+        return self.savedHotkeys[idx] if recording \
+                else self.mapper._hotkeys[idx]
 
+    def addExistingHotkey(self, hotkey):
+        self.mapper._hotkeys.append(hotkey)
+
+    def setMacroToggle(self, keys, toggleFunc):
+        hotkey = HotKey(keys, toggleFunc)
+        self.mapper._hotkeys.append(hotkey)
 
