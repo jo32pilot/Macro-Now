@@ -135,6 +135,8 @@ class MacroRunner(Thread):
                 # sleep for cpu
                 time.sleep(.01)
 
+        print(pq.queue)
+
         if resetHotkey:
             idx = recorder.findHotkey(keys, recording=False)
             recorder.setHotkey(idx, keys, steps, totalTime, loopNum, recording=False)

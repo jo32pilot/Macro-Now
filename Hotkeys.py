@@ -13,15 +13,41 @@ class Hotkeys():
         self.hotkeyRecorder = None
         self.updater = lambda: None
 
+        '''
+        from threading import Thread
+        self.checker = Thread(target=self._testState)
+        self.checker.start()
+        '''
+
         self.mapper.start()
 
     def backupHotkeys(self):
         self.savedHotkeys = self.mapper._hotkeys
         self.mapper._hotkeys = []
+        print('backedup')
 
     def reloadHotkeys(self):
+        for hotkey in self.savedHotkeys:
+            hotkey._state = set()
         self.mapper._hotkeys = self.savedHotkeys
         self.savedHotkeys = None
+        print('reloaded')
+
+    '''
+    def createNew(self):
+        self.mapper = keyboard.GlobalHotKeys({})
+        self.mapper._hotkeys = self.savedHotkeys
+        self.savedHotkeys = []
+        self.mapper.start()
+    
+    def _testState(self):
+        import time
+        for i in range(120):
+            if self.mapper._hotkeys:
+                for mapping in self.mapper._hotkeys:
+                    print(mapping._state)
+            time.sleep(1)
+    '''
 
     def recordHotkey(self, original=None, steps=None, totalTime=0, loopNum=0,
             updater=lambda: None):
