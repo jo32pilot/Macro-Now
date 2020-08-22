@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Main driver of this program.
+
+This file contains the logic to display the main window and start
+the global hotkeys thread. It also connects many of this program's
+classes together.
+
+"""
+
 
 # Form implementation generated from reading ui file '.\draft1.ui'
 #
@@ -18,7 +26,20 @@ from Hotkeys import Hotkeys
 import util
 
 class ConfigWindow(QWidget):
+    """Separate window to display configuration options.
+
+    Attributes:
+        recorder (Hotkeys): Hotkey recorder used throughout the program.
+    """
     def __init__(self, recorder, ui, config, parent=None):
+        """Constructor to set up layout of the window.
+
+        Args:
+            recorder (Hotkeys): Hotkey recorder used throughout the program.
+            ui (Ui_MainWindow): Main window of this program.
+            config (dict): Dictionary that holds user configurable options.
+            parent (QWidget): QWidget that will be set as this widget's parent.
+        """
         super().__init__(parent)
         self.recorder = recorder
         configLayout = QVBoxLayout()
@@ -29,6 +50,7 @@ class ConfigWindow(QWidget):
                 else 'Double Click To Edit'
         shortcut = EditLabelKeySequence(recorder, defaultText,
                 customFunc=lambda: ui.onRecordShortcut())
+
         shortcut.keys = configDefault[0]
         recordShortcut.addWidget(shortcut)
         recordShortcut.addWidget(shortcut.getEditor())
@@ -36,11 +58,13 @@ class ConfigWindow(QWidget):
         self.setLayout(configLayout)
 
     def closeEvent(self, event):
+        #TODO
         hotkeyRecorder = self.recorder.hotkeyRecorder
         if hotkeyRecorder and hotkeyRecorder.is_alive():
             self.recorder.finishRecording()
 
 class Ui_MainWindow(object):
+    """Class that displays the main application window."""
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -61,37 +85,37 @@ class Ui_MainWindow(object):
         self.addButton = QtWidgets.QPushButton(self.centralwidget)
         self.addButton.setGeometry(QtCore.QRect(650, 30, 30, 30))
         self.addButton.setStyleSheet("image: url(:/images/images/plus.png);\n"
-"padding:3px;")
+                "padding:3px;")
         self.addButton.setText("")
         self.addButton.setObjectName("addButton")
         self.undoButton = QtWidgets.QPushButton(self.centralwidget)
         self.undoButton.setGeometry(QtCore.QRect(750, 30, 30, 30))
         self.undoButton.setStyleSheet("image: url(:/images/images/undo.png);\n"
-"padding: 4px;")
+                "padding: 4px;")
         self.undoButton.setText("")
         self.undoButton.setObjectName("undoButton")
         self.redoButton = QtWidgets.QPushButton(self.centralwidget)
         self.redoButton.setGeometry(QtCore.QRect(800, 30, 30, 30))
         self.redoButton.setStyleSheet("image: url(:/images/images/redo.png);\n"
-"padding: 4px;")
+                "padding: 4px;")
         self.redoButton.setText("")
         self.redoButton.setObjectName("redoButton")
         self.configButton = QtWidgets.QPushButton(self.centralwidget)
         self.configButton.setGeometry(QtCore.QRect(900, 30, 30, 30))
         self.configButton.setStyleSheet("image: url(:/images/images/settings.png);\n"
-"padding: 3px;")
+                "padding: 3px;")
         self.configButton.setText("")
         self.configButton.setObjectName("configButton")
         self.deleteButton = QtWidgets.QPushButton(self.centralwidget)
         self.deleteButton.setGeometry(QtCore.QRect(700, 30, 30, 30))
         self.deleteButton.setStyleSheet("image: url(:/images/images/minus.png);\n"
-"padding: 4px;")
+                "padding: 4px;")
         self.deleteButton.setText("")
         self.deleteButton.setObjectName("deleteButton")
         self.saveButton = QtWidgets.QPushButton(self.centralwidget)
         self.saveButton.setGeometry(QtCore.QRect(850, 30, 30, 30))
         self.saveButton.setStyleSheet("image: url(:/images/images/save.png);\n"
-"padding: 4px;")
+                "padding: 4px;")
         self.saveButton.setText("")
         self.saveButton.setObjectName("saveButton")
         self.totalTime = QtWidgets.QLCDNumber(self.centralwidget)
@@ -101,7 +125,7 @@ class Ui_MainWindow(object):
         self.recordButton = QtWidgets.QPushButton(self.centralwidget)
         self.recordButton.setGeometry(QtCore.QRect(600, 30, 30, 30))
         self.recordButton.setStyleSheet("padding:5px;\n"
-"image: url(:/images/images/record.png);")
+                "image: url(:/images/images/record.png);")
         self.recordButton.setText("")
         self.recordButton.setObjectName("recordButton")
         self.recordButton.setCheckable(True)
@@ -109,7 +133,7 @@ class Ui_MainWindow(object):
         self.backButton = QtWidgets.QPushButton(self.centralwidget)
         self.backButton.setGeometry(QtCore.QRect(50, 30, 30, 30))
         self.backButton.setStyleSheet("padding:3px;\n"
-"image: url(:/images/images/back.png);")
+                "image: url(:/images/images/back.png);")
         self.backButton.setText("")
         self.backButton.setObjectName("backButton")
         MainWindow.setCentralWidget(self.centralwidget)
@@ -124,17 +148,29 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))   
 
     def backButtonEvent(self, watcher, recorder):
+        """Function to run upon clicking the back button.
+
+        Args:
+            watcher (KeyWatcher): Macro recorder used throughout the program.
+            recorder (Hotkeys): Hotkey recorder used throughout the program.
+        """
+        # Disable / enable buttons that shouldn't / should be pressed when
+        # displaying macros.
         ui.addButton.setDisabled(False)
         ui.backButton.setDisabled(True)
         ui.recordButton.setDisabled(True)
+
+        # Re-display macros
         self.listWidget.reloadMacroList(recorder)
         watcher.onBack()
 
     def configButtonEvent(self, recorder, config):
+        # TODO
         self.configWindow = ConfigWindow(recorder, self, config)
         self.configWindow.show()
         
     def onRecordShortcut():
+        # TODO
         self.recordButton.toggle()
         if self.recordButton.isChecked():
             self.recordMesg = QLabel('Recording')
@@ -149,7 +185,9 @@ import qtresources_rc
 if __name__ == "__main__":
     import sys
 
+    # File to save macros to and read from
     OUT_FILE = 'macros_file'
+
     config = {
         'recordShortcut': (None, '')
     }
@@ -162,7 +200,6 @@ if __name__ == "__main__":
 
     MacroWidget.ui = ui
 
-    #temp
     watcher = KeyWatcher(ui.listWidget, ui.totalTime)
     hotkeyRecorder = Hotkeys(watcher)
 
@@ -185,6 +222,7 @@ if __name__ == "__main__":
     ui.configButton.clicked.connect(lambda: ui.configButtonEvent(hotkeyRecorder,
             config))
 
+    # Disable buttons that shouldn't be pressed when displaying macros.
     ui.backButton.setDisabled(True)
     ui.recordButton.setDisabled(True)
 
