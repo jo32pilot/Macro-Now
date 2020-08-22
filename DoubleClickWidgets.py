@@ -62,8 +62,8 @@ class EditLabelKeySequence(EditLabel):
 
     recording = False
 
-    # TODO param for existing keys
-    def __init__(self, recorder, defaultText='', parent=None):
+    def __init__(self, recorder, defaultText='', customFunc=lambda: None,
+            parent=None):
         super().__init__(QKeySequenceEdit(), defaultText=defaultText,
                 parent=parent)
         self.recorder = recorder
@@ -71,6 +71,7 @@ class EditLabelKeySequence(EditLabel):
         self.steps = None
         self.time = 0
         self.loopNum = 0
+        self.customFunc = customFunc
 
     def updateText(self):
         newText = self.editor.keySequence().toString()
@@ -88,7 +89,7 @@ class EditLabelKeySequence(EditLabel):
         self.editor.clear()
         self._beginEdit()
         self.recorder.recordHotkey(self.keys, self.steps, self.time,
-                self.loopNum, self._finishEditing)
+                self.loopNum, self._finishEditing, self.customFunc)
 
 class MacroWidget(QWidget):
 
