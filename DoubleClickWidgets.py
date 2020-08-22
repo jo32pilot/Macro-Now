@@ -91,6 +91,9 @@ class EditLabelKeySequence(EditLabel):
                 self.loopNum, self._finishEditing)
 
 class MacroWidget(QWidget):
+
+    ui = None
+
     def __init__(self, listWidget, keyEdit, editLabel, loopSelector,
             time, parent=None):
         """ 
@@ -112,6 +115,10 @@ class MacroWidget(QWidget):
         if not self.keyEdit.getEditor().keySequence():
             self.keyEdit.setStyleSheet("background-color: #f4c7c3")
             return
+        ui = MacroWidget.ui
+        ui.backButton.setEnabled(True)
+        ui.recordButton.setEnabled(True)
+        ui.addButton.setEnabled(False)
         # must set curr focus before backup macros to correctly update macroList
         self.listWidget.setCurrFocus(self)
         self.listWidget.backupMacros()

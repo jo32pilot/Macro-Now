@@ -1,5 +1,6 @@
 from StepEvents import KeyboardEvent, ClickEvent, WaitEvent, ScrollEvent
 from win32gui import PostQuitMessage
+from MacroRunner import MacroRunner
 from StepConstants import StepEnum
 from pynput import mouse, keyboard
 from pynput.keyboard import HotKey
@@ -7,17 +8,8 @@ from threading import Thread, Lock
 from util import synchronize
 import time
 
-# TODO temp
-from MacroRunner import MacroRunner
-
-# maybe can turn this all into snake case?
-
-# TODO for mouse move and scroll only change time for time that user moves
-
 class KeyWatcher():
 
-
-    # TODO when press back button going to want to reset a bunch of these variables
     def __init__(self, listWidget, totalTimeDisp):
         self.listWidget = listWidget
         self.totalTimeDisp = totalTimeDisp
@@ -35,13 +27,10 @@ class KeyWatcher():
         self.clickEvent = ClickEvent(listWidget, self.keysDown, self.lock)
         self.waitEvent = WaitEvent(listWidget, self.keysDown, self.lock)
         self.scrollEvent = ScrollEvent(0, listWidget, self.keysDown, self.lock)
-        #self.moveEvent = MoveEvent(self.mouseController.position, listWidget, 
-        #        self.keysDown, self.lock)
 
         self.keyboard = keyboard.Listener(on_press=self.onPressEmit, 
                 on_release=self.onReleaseEmit)
         self.mouse = mouse.Listener(on_click=self.onClickEmit,
-                #on_move=self.onMouseMoveEmit,
                 on_scroll=self.onScrollEmit)
 
         self.keyboard.start()
@@ -66,18 +55,15 @@ class KeyWatcher():
         # this when changing macros
         self.setRecordTotalTime(0)
 
-    # TODO on record start, disconnect other macros
     def toggleRecord(self, record):
         if record:
             self.scrollEvent.reset(0)
-            #self.moveEvent.reset(self.mouseController.position)
 
             self.listWidget.keyPress.connect(self.keyboardEvent.onPress)
             self.listWidget.keyRelease.connect(self.keyboardEvent.onRelease)
             self.listWidget.mousePress.connect(self.clickEvent.onClick)
             self.listWidget.wait.connect(self.waitEvent.onWait)
             self.listWidget.mouseScroll.connect(self.scrollEvent.onScroll)
-            #self.listWidget.mouseMove.connect(self.moveEvent.onMove)
             self.listWidget.getCurrFocus().getRecorder().backupHotkeys()
 
             self.recordStartTime = time.time()
@@ -90,7 +76,6 @@ class KeyWatcher():
             self.listWidget.mousePress.disconnect()
             self.listWidget.wait.disconnect()
             self.listWidget.mouseScroll.disconnect()
-            #self.listWidget.mouseMove.disconnect()
 
             currFocus = self.listWidget.getCurrFocus()
             recorder = currFocus.getRecorder()
@@ -120,11 +105,6 @@ class KeyWatcher():
             currFocus.setSteps(parsedSteps)
             currFocus.setTime(self.recordTotalTime)
 
-
-
-    # TODO turn off some functionality when running macro or stop running 
-    # macro
-
     def canonize(func):       
         return lambda self, key: func(self, self.keyboard.canonical(key))
 
@@ -144,9 +124,6 @@ class KeyWatcher():
 
     def onScrollEmit(self, x, y, dx, dy):
         self.listWidget.mouseScroll.emit(self.startTime, x, y, dx, dy)
-
-    def onMouseMoveEmit(self, x, y):
-        self.listWidget.mouseMove.emit(self.startTime, x, y)
 
     def startUpdater(self):
         if not self.updater.is_alive():

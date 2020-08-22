@@ -7,7 +7,6 @@ class KeyListWidget(QListWidget):
     keyPress = pyqtSignal(float, object)
     keyRelease = pyqtSignal(float, object)
     mousePress = pyqtSignal(float, float, float, object, bool)
-    mouseMove = pyqtSignal(float, float, float)
     mouseScroll = pyqtSignal(float, float, float, float, float)
     wait = pyqtSignal(float)
 
