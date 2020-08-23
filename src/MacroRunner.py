@@ -89,7 +89,9 @@ class MacroRunner(Thread):
                             mouse.press(Button.right)
 
                         elif stepType == StepEnum.KEY:
+                            print(data)
                             key = data if len(data) == 1 else keyConst(data)
+                            print(key)
                             keyboard.press(key)
 
                 # top denotes the step with the highest priority
@@ -136,7 +138,6 @@ class MacroRunner(Thread):
                         x, y = end
                         mouse.position = (int(x), int(y))
                         mouse.release(Button.left)
-                        print('released')
                     elif topStepType == StepEnum.MOUSE_RIGHT_DRAG:
                         start, end = topData
                         x, y = end
