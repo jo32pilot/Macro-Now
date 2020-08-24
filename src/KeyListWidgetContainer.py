@@ -482,8 +482,10 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         Return: The extra widget from _getValueWidget that needs to be edited
                 while recording.
         """
-        #TODO make editlabel editors smaller because right now taking too much space
-        #TODO put cap on number that can be entered. see if can get monitor resolution
+        # TODO make editlabel editors smaller because right now taking too much
+        # space
+        # TODO put cap on number that can be entered. see if can get monitor
+        # resolution
 
         # Init step type change button and it's layout.
         stepButton = makeButton(self.savedParent, stepImage(stepType))

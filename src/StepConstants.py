@@ -1,7 +1,11 @@
+"""File for constants."""
+
+
 from pynput.keyboard import Key, KeyCode
 from enum import Enum
 
 class StepEnum(Enum):
+    """Enums for step types."""
     ACTIVE_WAIT = 0
     MOUSE_LEFT = 1
     MOUSE_RIGHT = 2
@@ -11,6 +15,18 @@ class StepEnum(Enum):
     KEY = 6
 
     def __lt__(self, other):
+        """Less than operator overload for enums.
+
+        It doesn't actually matter which values are greater than which. We just
+        need to override this because the priority queue in MacroRunner tie
+        tie breaks by looking at StepEnum.
+
+        Args:
+            other (StepEnum): The other StepEnum to compare to.
+
+        Return: True if the value of other is greater than self's value.
+                False otherwise.
+        """
         return self.value < other.value
 
 

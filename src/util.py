@@ -63,9 +63,10 @@ def read(filename, listWidget, recorder):
     if os.path.exists(filename):
         # TODO when optimizing, remember to open in binary mode for carriadge 
         # returns
+        delim = '\0\0\0'
         with open(filename, 'r') as toLoad:
             for line in toLoad:
-                name, steps, time, keys, keyString, loopNum = line.split('\0\0\0')
+                name, steps, time, keys, keyString, loopNum = line.split(delim)
                 steps = _readSteps(steps)
                 keys = _readKeys(keys)
                 time = float(time)
@@ -98,7 +99,8 @@ def write(filename, listWidget):
             # Delimit each hotkey key with a single null terminator
             keys = '\0'.join(map(lambda key: str(key), keys))
 
-            lines.append(f'{name}\0\0\0{steps}\0\0\0{time}\0\0\0{keys}\0\0\0{keyString}\0\0\0{loopNum}\n')
+            lines.append(f'{name}\0\0\0{steps}\0\0\0{time}\0\0\0{keys}\0\0\0'
+                    f'{keyString}\0\0\0{loopNum}\n')
         out.writelines(lines)
 
 def _serializeSteps(steps):

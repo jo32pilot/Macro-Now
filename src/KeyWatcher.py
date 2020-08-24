@@ -19,7 +19,8 @@ class KeyWatcher():
     Attributes:
         listWidget (KeyListWidget): The sole list widget displayed in the
                                     program.
-        totalTimeDisp (QLCDNumber): Widget to display total time this macro takes.
+        totalTimeDisp (QLCDNumber): Widget to display total time this macro
+                                    takes.
         recordStartTime (float): Time when macro began recording.
         recordTotalTime (float): Time it took to run the macro
         startTime (float): Current time passed since macro recording 
@@ -266,7 +267,8 @@ class KeyWatcher():
             
         """
         while self.recording:
-            self.startTime = time.time() - self.recordStartTime + self.recordTotalTime
+            self.startTime = time.time() - self.recordStartTime + \
+                    self.recordTotalTime
             if StepEnum.MOUSE_SCROLL in self.keysDown:
                 self.scrollEvent.update()
             self.onWaitEmit()

@@ -1,3 +1,8 @@
+"""File containing the class the run a macro.
+
+This file needs major refactoring.
+"""
+
 from StepConstants import StepEnum, keyConst
 from pynput.keyboard import KeyCode
 from pynput.mouse import Button
@@ -8,7 +13,8 @@ import time
 class MacroRunner(Thread):
 
     # TODO this is stupid, refactor this
-    def __init__(self, steps, totalTime, loopNum, mouse, keyboard, keys, recorder):
+    def __init__(self, steps, totalTime, loopNum, mouse, keyboard, keys,
+            recorder):
         args = (steps, totalTime, loopNum, mouse, keyboard, keys, recorder)
         super().__init__(target=self.runMacro, args=args)
         self.loopInf = True
@@ -16,8 +22,8 @@ class MacroRunner(Thread):
     def _finishLoop(self):
         self.loopInf = False
 
-    def runMacro(self, steps, totalTime, loopNum, mouse, keyboard, keys, recorder):
-        print(f'loop : {loopNum}')
+    def runMacro(self, steps, totalTime, loopNum, mouse, keyboard, keys,
+            recorder):
 
         # If -1, stop only when user re-presses hotkey
         resetHotkey = False
@@ -56,12 +62,7 @@ class MacroRunner(Thread):
                         nextStep += 1
                         pq.put((holdTime, stepType, data, stepStart))
 
-                        # perform step. no case for mouse move because we'll
-                        # just move the mouse to the end at the end of the hold time.
-                        # ran into problems when trying to simplify mouse movement
-                        # into a straight line and moving gradually. Maybe can 
-                        # save all points in mouse movement but sounds horribly
-                        # ineffecient
+                        # perform step.
                         if stepType == StepEnum.MOUSE_LEFT:
                             mouse.position = data
                             mouse.press(Button.left)
@@ -71,7 +72,8 @@ class MacroRunner(Thread):
                             mouse.press(Button.right)
 
                         elif stepType == StepEnum.MOUSE_SCROLL:
-                            ticksPerScroll = abs(holdTime / data) if data != 0 else 0
+                            ticksPerScroll = abs(holdTime / data) if data != 0 \
+                                    else 0
                             scrolling = True
                             scrollStartTime = time.time()
                             scrollDir = 1 if data > 0 else -1
@@ -89,9 +91,7 @@ class MacroRunner(Thread):
                             mouse.press(Button.right)
 
                         elif stepType == StepEnum.KEY:
-                            print(data)
                             key = data if len(data) == 1 else keyConst(data)
-                            print(key)
                             keyboard.press(key)
 
                 # top denotes the step with the highest priority
@@ -101,15 +101,16 @@ class MacroRunner(Thread):
                 currScrollTime = time.time() - scrollStartTime
                 currTickThreshold = ticksPerScroll * currScrollTick
 
-                # if scrolling performed and current amount of time spent scrolling
-                # exceeds the current threshold to scroll again
+                # if scrolling performed and current amount of time spent
+                # scrolling exceeds the current threshold to scroll again
                 if scrolling and currScrollTime > currTickThreshold:
 
                     # If currScrollTime > ticksPerMove * (currMoveTick + 1),
-                    # then we won't reach the end point by the end time (this could
-                    # occur because we've slept for too long). So we perform the
-                    # following calculation (same idea for move)
-                    numScroll = (currScrollTime - currTickThreshold) // ticksPerScroll
+                    # then we won't reach the end point by the end time (this
+                    # could occur because we've slept for too long). So we
+                    # perform the following calculation (same idea for move)
+                    scrollDiff = currScrollTime - currTickThreshold
+                    numScroll = (scrollDiff) // ticksPerScroll
 
                     yScroll = scrollDir * numScroll
                     mouse.scroll(0, yScroll)
@@ -145,7 +146,8 @@ class MacroRunner(Thread):
                         mouse.release(Button.right)
 
                     elif topStepType == StepEnum.KEY:
-                        key = topData if len(topData) == 1 else keyConst(topData)
+                        key = topData if len(topData) == 1 \
+                                else keyConst(topData)
                         keyboard.release(key)
 
                 currTime = time.time() - runStart
@@ -155,6 +157,7 @@ class MacroRunner(Thread):
 
         if resetHotkey:
             idx = recorder.findHotkey(keys, recording=False)
-            recorder.setHotkey(idx, keys, steps, totalTime, loopNum, recording=False)
+            recorder.setHotkey(idx, keys, steps, totalTime, loopNum,
+                    recording=False)
         recorder.reloadHotkeys()
 

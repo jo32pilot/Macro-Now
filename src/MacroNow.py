@@ -102,14 +102,14 @@ class Ui_MainWindow(object):
         self.redoButton.setObjectName("redoButton")
         self.configButton = QtWidgets.QPushButton(self.centralwidget)
         self.configButton.setGeometry(QtCore.QRect(900, 30, 30, 30))
-        self.configButton.setStyleSheet("image: url(:/images/images/settings.png);\n"
-                "padding: 3px;")
+        self.configButton.setStyleSheet(
+                "image: url(:/images/images/settings.png);\npadding: 3px;")
         self.configButton.setText("")
         self.configButton.setObjectName("configButton")
         self.deleteButton = QtWidgets.QPushButton(self.centralwidget)
         self.deleteButton.setGeometry(QtCore.QRect(700, 30, 30, 30))
-        self.deleteButton.setStyleSheet("image: url(:/images/images/minus.png);\n"
-                "padding: 4px;")
+        self.deleteButton.setStyleSheet(
+                "image: url(:/images/images/minus.png);\npadding: 4px;")
         self.deleteButton.setText("")
         self.deleteButton.setObjectName("deleteButton")
         self.saveButton = QtWidgets.QPushButton(self.centralwidget)
