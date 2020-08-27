@@ -5,8 +5,8 @@ The StepEvent will update what the list widget displays.
 Event state is also kept by a shared dictionary (initialized in KeyWatcher).
 """
 
+from util import synchronize, parseKey
 from StepConstants import StepEnum
-from util import synchronize
 from pynput import mouse
 import time
 
@@ -67,24 +67,6 @@ class StepEvent():
 class KeyboardEvent(StepEvent):
     """Event class for keyboard events."""
 
-    def _parseKey(self, key):
-        """Returns the string representation of the key.
-
-        Special KeyCodes when converted to a string are formatted like
-        KeyCode.<keycode> (e.g. KeyCode.ctrl). So we parse for just <keycode>.
-        We also need to strip the the extra single quotes surrounding the
-        string.
-
-        Args:
-            key (KeyCode): KeyCode to parse into the desired string.
-
-        Return: The string representation of the passed in key.
-        """
-        key = str(key)
-        # special case where character is a single quote
-        key = key.strip("'") if key != "\"'\"" else "'"
-        return key if len(key) == 1 else key.split('.')[1]
-
     def onPress(self, startTime, key):
         """Callback for when a key is pressed.
 
@@ -97,8 +79,9 @@ class KeyboardEvent(StepEvent):
             key (KeyCode): Key pressed.
         """
         if key not in self.keysDown:
+            key = str(key)
             press = self.listWidget.listWidgetAddStep(
-                    startTime, StepEnum.KEY, self._parseKey(key)).getPress()
+                    startTime, StepEnum.KEY, parseKey(key)).getPress()
             self._dictAdd(key, (press, time.time()))
 
     def onRelease(self, startTime, key):

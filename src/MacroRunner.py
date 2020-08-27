@@ -3,14 +3,19 @@
 This file needs major refactoring.
 """
 
-from StepConstants import StepEnum, keyConst
+import pynput._util.win32_vks as VK
+from StepConstants import StepEnum, keyConst, keyToVK, isVKPress
+from KeyboardController import pressKey, releaseKey
 from pynput.keyboard import KeyCode
+from win32api import MapVirtualKey, VkKeyScan
 from pynput.mouse import Button
 from queue import PriorityQueue
 from threading import Thread
 import time
 
 class MacroRunner(Thread):
+
+    _DELTA = .1
 
     # TODO this is stupid, refactor this
     def __init__(self, steps, totalTime, loopNum, mouse, keyboard, keys,
@@ -41,6 +46,7 @@ class MacroRunner(Thread):
             loopTrack -= 1
             runStart = time.time()
 
+            keySet = set()
             currTime = time.time() - runStart
             pq = PriorityQueue()
             nextStep = 0
@@ -50,7 +56,8 @@ class MacroRunner(Thread):
             currScrollTick = 0
             scrollDir = 0
 
-            while currTime < totalTime:
+            while currTime < totalTime + MacroRunner._DELTA:
+
 
                 # more steps to perform
                 if nextStep < len(steps):
@@ -91,8 +98,16 @@ class MacroRunner(Thread):
                             mouse.press(Button.right)
 
                         elif stepType == StepEnum.KEY:
-                            key = data if len(data) == 1 else keyConst(data)
-                            keyboard.press(key)
+                            key = VkKeyScan(data) if len(data) == 1 \
+                                    else keyConst(data)
+                            if isVKPress(key):
+                                print(key)
+                                keyboard.press(key)
+                            else:
+                                key = MapVirtualKey(keyToVK(key), 0)
+                                keySet.add(key)
+                                pressKey(key)
+                                releaseKey(key)
 
                 # top denotes the step with the highest priority
                 topHoldTime, topStepType, topData, topStart = \
@@ -146,14 +161,26 @@ class MacroRunner(Thread):
                         mouse.release(Button.right)
 
                     elif topStepType == StepEnum.KEY:
-                        key = topData if len(topData) == 1 \
+                        key = VkKeyScan(topData) if len(topData) == 1 \
                                 else keyConst(topData)
-                        keyboard.release(key)
+                        if isVKPress(key):
+                            keyboard.release(key)
+                        else:
+                            key = MapVirtualKey(keyToVK(key), 0)
+                            try:
+                                keySet.remove(key)
+                            except KeyError:
+                                print(key)
+
+                for key in keySet:
+                    pressKey(key)
+                    releaseKey(key)
 
                 currTime = time.time() - runStart
 
                 # sleep for cpu
-                time.sleep(.01)
+                time.sleep(.02)
+                #time.sleep(.1)
 
         if resetHotkey:
             idx = recorder.findHotkey(keys, recording=False)

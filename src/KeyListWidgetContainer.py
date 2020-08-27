@@ -68,6 +68,8 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
             loopNum (int): Number of times to loop this macro.
         """
 
+        print('begin init wdiget')
+
         # Initialize widgets that will be displayed in the container widget.
         keyEdit = EditLabelKeySequence(recorder, 'Key here')
         editLabel = EditLabelLine(text)
@@ -77,6 +79,8 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
         macroWidget = MacroWidget(listWidget, keyEdit, editLabel, loopSelector,
                 time)
         super().__init__(macroWidget)
+
+        print('after super init')
 
         if keys:
             # As long as hotkey exists, make sure key sequence

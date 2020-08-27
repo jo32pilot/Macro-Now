@@ -6,6 +6,7 @@ some new function on top of the widget's normal behavior.
 """
 
 from PyQt5.QtWidgets import QLabel, QWidget, QLineEdit, QKeySequenceEdit
+import AppConfig
 
 class EditLabel(QLabel):
     """Base class for widgets that can be editted upon double clicking.
@@ -121,6 +122,8 @@ class EditLabelKeySequence(EditLabel):
                        the hotkey is pressed again.
         customFunc (func): Function to run if this class isn't used for
                            recording hotkeys for macros.
+        config (str): The configuration option this changes, or the empty string
+                      if none.
 
     Class Attributes:
         recording (bool): Denotes if any instances of this class are currently
@@ -131,7 +134,7 @@ class EditLabelKeySequence(EditLabel):
     recording = False
 
     def __init__(self, recorder, defaultText='', customFunc=lambda: None,
-            parent=None):
+            config='', parent=None):
         """Constructor to initialize base class and instance variables.
 
         Args:
@@ -148,6 +151,7 @@ class EditLabelKeySequence(EditLabel):
         self.time = 0
         self.loopNum = 0
         self.customFunc = customFunc
+        self.config = config
 
     def updateText(self):
         """Gets text from QKeySequenceEdit and updates this label."""
@@ -163,6 +167,9 @@ class EditLabelKeySequence(EditLabel):
         """
         self.keys = keys
         self.updateText()
+        if self.config:
+            AppConfig.AppConfig.config[self.config] = \
+                    (keys, self.getSavedText())
         self.setStyleSheet('background-color: transparent')
 
     def mouseDoubleClickEvent(self, event):

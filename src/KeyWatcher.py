@@ -99,6 +99,7 @@ class KeyWatcher():
             recorder (Hotkeys): Hotkey recorder used throughout the program.
 
         """
+        print('playing hotkey')
         runner = MacroRunner(steps, time, loopNum, self.mouseController, 
                 self.keyController, keys, recorder)
         runner.start()

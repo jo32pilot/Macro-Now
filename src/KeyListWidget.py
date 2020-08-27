@@ -109,11 +109,15 @@ class KeyListWidget(QListWidget):
         Args:
             recorder (Hotkeys): Hotkey recorder used throughout the program.
             text (str): String to display as the macro name.
+
+        Return: The KeyListWidgetMacro created
         """
         item = QListWidgetItem()
         container = KeyListWidgetMacro(recorder, self, text)
         self.macroWidgets.append(container)
+        print('made')
         self._finalizeItem(item, container)
+        return container
 
     def listWidgetAddStep(self, startTime, stepType, data=None, holdTime=0):
         """Displays a new macro step in the list.
@@ -222,6 +226,7 @@ class KeyListWidget(QListWidget):
             self.reloadMacro(recorder, name, steps, time, keys, keyString,
                     loopNum)
         self.macroList = []
+        self.currFocus = None
 
     def removeLast(self):
         """Removes the last step added."""

@@ -3,6 +3,7 @@
 from PyQt5 import QtWidgets, QtCore
 from StepConstants import StepEnum, keyConst
 from pynput.keyboard import KeyCode
+from win32api import MapVirtualKey
 import os
 
 
@@ -173,6 +174,47 @@ def _readSteps(stepsStr):
         stepsList.append((stepType, data, hold, start))
     return stepsList
 
+def parseKey(
+        key, 
+        specialConvert=lambda string: string, 
+        vkConvert=lambda elem: chr(MapVirtualKey(elem, 2)), 
+        normConvert=lambda string: string):
+    """Applies a passed in function to the parsed key and returns the result.
+
+    Special KeyCodes when converted to a string are formatted like
+    KeyCode.<keycode> (e.g. KeyCode.ctrl). So we parse for just <keycode>.
+    For these keys, we apply the specialConvert function.
+
+    If the passed in key is a virtual keycode, it will come with
+    <> surrounding it, so we need to remove those as well. For these keys, we
+    apply the vkConvert function.
+
+    If the passed in key is a single character, we apply the normConvert
+    function.
+
+    We also need to strip the the extra single quotes surrounding the string.
+
+    Args:
+        key (str): String to parse and apply one of the passed in functions to.
+
+    Return: The parsed string with one of the passed in functions applied to it.
+    """
+
+    #Special KeyCodes when converted to a string are formatted like
+    #KeyCode.<keycode> (e.g. KeyCode.ctrl). So we parse for just <keycode>.
+    split = key.split('.')
+    if len(split) > 1:
+        return specialConvert(split[1])
+
+    # Else if virtual key code is surrounded by <>. Need to strip.
+    elif key[0] == '<':
+        return vkConvert(int(key[1:-1]))
+
+    else:
+        # for some reason key[1:-1] doesn't work
+        # There's a special case where character is a single quote
+        return normConvert(key.strip("'") if key != "\"'\"" else "'")
+
 def _readKeys(keysStr):
     """Takes a string of serialized hotkey keys to read.
 
@@ -185,22 +227,8 @@ def _readKeys(keysStr):
     keySet = set()
 
     for key in keys:
-
-        #Special KeyCodes when converted to a string are formatted like
-        #KeyCode.<keycode> (e.g. KeyCode.ctrl). So we parse for just <keycode>.
-        split = key.split('.')
-        if len(split) > 1:
-            keySet.add(keyConst(split[1]))
-
-        # Else if virtual key code is surrounded by <>. Need to strip.
-        elif key[0] == '<':
-            keySet.add(KeyCode.from_vk(int(key[1:-1])))
-
-        # special case where character is a single quote
-        else:
-            # for some reason key[1:-1] doesn't work
-            keySet.add(KeyCode.from_char(key.strip("'")
-                    if key != "\"'\"" else "'"))
+        keyCode = parseKey(key, keyConst, KeyCode.from_vk, KeyCode.from_char)
+        keySet.add(keyCode)
     return keySet
 
 

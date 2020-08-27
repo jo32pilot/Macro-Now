@@ -1,8 +1,9 @@
 """File containing the hotkey recording logic."""
 
 from DoubleClickWidgets import EditLabelKeySequence
-from pynput import keyboard
 from pynput.keyboard import HotKey
+from AppConfig import AppConfig
+from pynput import keyboard
 
 class Hotkeys():
     """This class wraps pynput's GlobalHotKeys to record and store hotkeys.
@@ -52,7 +53,8 @@ class Hotkeys():
     def backupHotkeys(self):
         """Backs up and clears the hotkeys in the hotkey listener."""
         self.savedHotkeys = self.mapper._hotkeys
-        self.mapper._hotkeys = []
+        idx = self.findHotkey(AppConfig.config['recordShortcut'][0])
+        self.mapper._hotkeys = [] if idx == -1 else [self.savedHotkeys[idx]]
 
     def reloadHotkeys(self):
         """Reloads saved hot keys into the hotkey listener.
@@ -218,8 +220,8 @@ class Hotkeys():
         # If steps, totalTime, and loopNum weren't passed in / are inherintly
         # False, then that means this hotkey will not be used for a macro,
         # so we mapm the custom function instead.
-        func = lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum,
-                keys, self) if steps and totalTime and loopNum else customFunc
+        func = (lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum, \
+                keys, self)) if steps and totalTime and loopNum else customFunc
         hotkey = HotKey(keys, func)
         addTo.append(hotkey)
 
@@ -285,8 +287,8 @@ class Hotkeys():
         # If steps, totalTime, and loopNum weren't passed in / are inherintly
         # False, then that means this hotkey will not be used for a macro,
         # so we map the custom function instead.
-        func = lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum,
-                keys, self) if steps and totalTime and loopNum else customFunc
+        func = (lambda: self.keyWatcher._runMacro(steps, totalTime, loopNum,
+                keys, self)) if steps and totalTime and loopNum else customFunc
         hotkey = HotKey(keys, func)
         addTo[idx] = hotkey
 

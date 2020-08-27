@@ -1,6 +1,6 @@
 """File for constants."""
 
-
+import pynput._util.win32_vks as VK
 from pynput.keyboard import Key, KeyCode
 from enum import Enum
 
@@ -103,6 +103,63 @@ _KEY_CONSTANTS = {
     'up': Key.up,
 }
 
+_VK_CONST = {
+    Key.alt : VK.MENU,
+    Key.alt_l : VK.LMENU,
+    Key.alt_r : VK.RMENU,
+    Key.alt_gr : VK.RMENU,
+    Key.backspace : VK.BACK,
+    Key.caps_lock : VK.CAPITAL,
+    Key.cmd : VK.LWIN,
+    Key.cmd_l : VK.LWIN,
+    Key.cmd_r : VK.RWIN,
+    Key.ctrl : VK.CONTROL,
+    Key.ctrl_l : VK.LCONTROL,
+    Key.ctrl_r : VK.RCONTROL,
+    Key.delete : VK.DELETE,
+    Key.down : VK.DOWN,
+    Key.end : VK.END,
+    Key.enter : VK.RETURN,
+    Key.esc : VK.ESCAPE,
+    Key.f1 : VK.F1,
+    Key.f2 : VK.F2,
+    Key.f3 : VK.F3,
+    Key.f4 : VK.F4,
+    Key.f5 : VK.F5,
+    Key.f6 : VK.F6,
+    Key.f7 : VK.F7,
+    Key.f8 : VK.F8,
+    Key.f9 : VK.F9,
+    Key.f10 : VK.F10,
+    Key.f11 : VK.F11,
+    Key.f12 : VK.F12,
+    Key.f13 : VK.F13,
+    Key.f14 : VK.F14,
+    Key.f15 : VK.F15,
+    Key.f16 : VK.F16,
+    Key.f17 : VK.F17,
+    Key.f18 : VK.F18,
+    Key.f19 : VK.F19,
+    Key.f20 : VK.F20,
+    Key.home : VK.HOME,
+    Key.left : VK.LEFT,
+    Key.page_down : VK.NEXT,
+    Key.page_up : VK.PRIOR,
+    Key.right : VK.RIGHT,
+    Key.shift : VK.LSHIFT,
+    Key.shift_l : VK.LSHIFT,
+    Key.shift_r : VK.RSHIFT,
+    Key.space : VK.SPACE,
+    Key.tab : VK.TAB,
+    Key.up : VK.UP,
+}
+
+_VK_KEYS = {
+    Key.up,
+    Key.down,
+    Key.left,
+    Key.right,
+}
 
 def stepImage(step):
     return _ENUM_CONST[step][0]
@@ -112,3 +169,9 @@ def stepDescriptor(step):
 
 def keyConst(key):
     return _KEY_CONSTANTS[key]
+
+def keyToVK(key):
+    return _VK_CONST.get(key, key)
+
+def isVKPress(key):
+    return key in _VK_KEYS
