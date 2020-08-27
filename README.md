@@ -5,10 +5,12 @@ Macro Now is a Window's desktop application that records macros in real time.
 ![](https://i.imgur.com/ykLozzY.png)
 
 Macro Now's GUI is written using [PyQt5](https://pypi.org/project/PyQt5/), 
-and the recording and playback of macros
-is handled by [pynput](https://github.com/moses-palmer/pynput). Although, I have
-plans to refactor the macro playback code to use scan codes instead of 
-the virtual key codes that pynput uses.
+and the recording of macros
+is handled by [pynput](https://github.com/moses-palmer/pynput). The playback
+of macros is mostly handled raw using `ctypes`. This is so we can use scan codes
+rather than the virtual keycodes that pynput uses. Although, arrow keys are
+still played back by pynput for reasons that don't really matter for most
+people.
 
 **Warning:** This application is far from finished. The base functionality of
 recording and playing back macros, serializing the macros to write to disc,
@@ -46,7 +48,7 @@ In no particular order...
 - [ ] Lots o' configuration options.
 - [ ] Display the total time a macro takes to run.
 - [ ] Make application look less ugly.
-- [ ] Shortcut to toggle recording.
+- [x] Shortcut to toggle recording.
 - [ ] Start recording under focused macro step. Don't even know if this is.
     a good feature. We'll see.
 
