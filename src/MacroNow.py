@@ -131,9 +131,9 @@ class Ui_MainWindow(QWidget):
         self.listWidget.reloadMacroList(recorder)
         watcher.onBack()
 
-    def configEvent(self, recorder):
+    def configEvent(self):
         # TODO
-        self.configWindow = AppConfig(recorder, self)
+        self.configWindow = AppConfig()
         self.configWindow.show()
         
     def onRecordShortcut(self, recorder):
@@ -177,6 +177,8 @@ if __name__ == "__main__":
 
     watcher = KeyWatcher(ui.listWidget, ui.totalTime)
     hotkeyRecorder = Hotkeys(watcher)
+    AppConfig.setUpClass(hotkeyRecorder, ui)
+    AppConfig.readConfig()
 
     ui.recordShortcut.connect(
             lambda: ui.onRecordShortcut(hotkeyRecorder))
@@ -196,7 +198,7 @@ if __name__ == "__main__":
 
     ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
 
-    ui.configButton.clicked.connect(lambda: ui.configEvent(hotkeyRecorder))
+    ui.configButton.clicked.connect(lambda: ui.configEvent())
 
     # Disable buttons that shouldn't be pressed when displaying macros.
     ui.backButton.setDisabled(True)

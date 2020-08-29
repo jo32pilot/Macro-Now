@@ -168,8 +168,8 @@ class EditLabelKeySequence(EditLabel):
         self.keys = keys
         self.updateText()
         if self.config:
-            AppConfig.AppConfig.config[self.config] = \
-                    (keys, self.getSavedText())
+            AppConfig.AppConfig.config['shortcuts'][self.config] = \
+                    [keys, self.getSavedText()]
         self.setStyleSheet('background-color: transparent')
 
     def mouseDoubleClickEvent(self, event):
