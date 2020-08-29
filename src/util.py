@@ -147,11 +147,14 @@ def parseKey(
         # There's a special case where character is a single quote
         return normConvert(key.strip("'") if key != "\"'\"" else "'")
 
+def keyStringToKeyCode(keyString):
+    return parseKey(keyString, keyConst, KeyCode.from_vk, KeyCode.from_char)
+
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
-        elif isinstance(obj, Key):
+        elif isinstance(obj, Key) or isinstance(obj, KeyCode):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
@@ -238,7 +241,7 @@ def _readKeys(keysStr):
     keySet = set()
 
     for key in keys:
-        keyCode = parseKey(key, keyConst, KeyCode.from_vk, KeyCode.from_char)
+        keyCode = keyStringToKeyCode(key)
         keySet.add(keyCode)
     return keySet
 

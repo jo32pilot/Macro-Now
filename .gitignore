@@ -10,3 +10,4 @@ ui_tests/
 macros_file
 testPress.py
 TODO
+*.json

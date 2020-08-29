@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
-from util import makeButton, SetEncoder
+from util import makeButton, SetEncoder, keyStringToKeyCode
 import DoubleClickWidgets
 import json
 import os
@@ -37,6 +37,7 @@ class AppConfig(QWidget):
         recordShortcut = QHBoxLayout()
         recordShortcut.addWidget(QLabel('Toggle Record Shortcut: '))
         configDefault = AppConfig.config['shortcuts']['recordShortcut']
+        print(AppConfig.config)
         defaultText = configDefault[1] if configDefault[1] \
                 else 'Double Click To Edit'
         shortcut = DoubleClickWidgets.EditLabelKeySequence(AppConfig.recorder,
@@ -69,24 +70,20 @@ class AppConfig(QWidget):
     @classmethod
     def _writeConfig(cls):
         with open(cls._CONFIG_FILE, 'w') as configFile:
-            cls.config = {
-                **cls.config, 
-                **json.dump(cls.config, configFile, cls=SetEncoder)
-            }
+            json.dump(cls.config, configFile, cls=SetEncoder)
 
     @classmethod
     def readConfig(cls):
         if os.path.exists(cls._CONFIG_FILE):
             with open(cls._CONFIG_FILE, 'r') as configFile:
-                writtenConfig = json.load(configFile)
+                cls.config = {**cls.config, **json.load(configFile)}
 
             shortcuts = cls.config['shortcuts']
-            print(shortcuts)
             # Python pattern matching is so nice
             for option, (keys, keyString) in shortcuts.items():
                 if keys:
-                    keys = set(keys)
-                    shortcuts[option] = keys
+                    keys = {keyStringToKeyCode(key) for key in keys}
+                    shortcuts[option] = [keys, keyString]
                     cls.recorder.addHotkey(keys,
                             customFunc=cls.shortcutFunctions[option],
                             recording=False)

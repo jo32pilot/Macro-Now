@@ -53,7 +53,8 @@ class Hotkeys():
     def backupHotkeys(self):
         """Backs up and clears the hotkeys in the hotkey listener."""
         self.savedHotkeys = self.mapper._hotkeys
-        idx = self.findHotkey(AppConfig.config['recordShortcut'][0])
+        configKey = AppConfig.config['shortcuts']['recordShortcut'][0]
+        idx = self.findHotkey(configKey)
         self.mapper._hotkeys = [] if idx == -1 else [self.savedHotkeys[idx]]
 
     def reloadHotkeys(self):
