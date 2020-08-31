@@ -3,6 +3,7 @@
 from KeyListWidgetContainer import KeyListWidgetMacro, KeyListWidgetStep
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5.QtCore import pyqtSignal
+from StepConstants import StepEnum
 
 class KeyListWidget(QListWidget):
     """Class to extend the functionality of QListWidget.
@@ -246,7 +247,59 @@ class KeyListWidget(QListWidget):
         """Removes the last step added."""
         self._removeItem(self.count() - 1, self.stepContainers)
 
+    def onAddPress(self, recorder):
+        """Callback event for when the add button is pressed.
+
+        When looking at the list of macros, adds a new macro to the bottom
+        of the list. When looking at macro steps, adds a new active wait step
+        under the currently focused step, or to the bottom if no step is
+        focused.
+
+        Args:
+            recorder (Hotkeys): The hotkey recorder used throughout the program.
+        """
+
+        # If we're looking at macro steps.
+        if self.currFocus:
+            widgetFocus = self.selectedItems()
+            item = QListWidgetItem()
+
+            # Default value for if no step is focused
+            idx = self.count()
+            startTime = 0
+
+            # If a step is focused
+            if widgetFocus:
+                idx = self.row(widgetFocus[0])
+                startTime = self.parsedSteps[idx][3]
+
+            # Create and display new step
+            container = KeyListWidgetStep(startTime, StepEnum.ACTIVE_WAIT,
+                    None, 0)
+            self.insertItem(idx, item)
+            self._finalizeItem(item, container)
+            
+            # Updates list so recording over / reloading these steps later
+            # works.
+            self.stepContainers.insert(idx, container)
+            self.parsedSteps.insert(idx, (StepEnum.ACTIVE_WAIT, None, 0,
+                startTime))
+
+            # Update hotkey with new step.
+            recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
+                    self.loopNum)
+        else:
+            self.listWidgetAddEditLabel(recorder, 'untitled')
+        
+
     def onDeletePress(self, recorder):
+        """Callback event for when the delete button is pressed.
+
+        Essentially deletes the focused list item.
+
+        Args:
+            recorder (Hotkeys): The hotkey recorder used throughout the program.
+        """
         widgetFocus = self.selectedItems()
         if not widgetFocus:
             return 
@@ -257,7 +310,8 @@ class KeyListWidget(QListWidget):
         # If we're editting the steps of a macro
         if self.currFocus: 
             self._removeItem(idx, self.parsedSteps, self.stepContainers)
-            # TODO need to update the hotkey
+            self.updateMacroSteps(self.currFocus, self.parsedSteps,
+                    self.loopNum)
         else:
             hotkeyKeys = self.macroWidgets[idx].getContainer().getKeys()
             recorder.removeHotkey(hotkeyKeys)

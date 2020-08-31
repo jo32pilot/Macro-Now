@@ -37,7 +37,7 @@ Or at least the things I can think of right now as I write this.
 
 ### Features
 In no particular order...
-- [ ] Delete macros.
+- [x] Delete macros.
 - [ ] Undo edit.
 - [ ] Redo edit.
 - [ ] Delete macro step.

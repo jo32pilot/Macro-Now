@@ -247,7 +247,6 @@ class MacroWidget(QWidget):
         ui = MacroWidget.ui
         ui.backButton.setEnabled(True)
         ui.recordButton.setEnabled(True)
-        ui.addButton.setEnabled(False)
 
         # Must set curr focus before backup macros to correctly update
         # KeyListWidget's member, macroList

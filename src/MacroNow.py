@@ -197,8 +197,7 @@ if __name__ == "__main__":
 
     # lmao what is this line
     ui.addButton.clicked.connect(
-            lambda: ui.listWidget.listWidgetAddEditLabel(
-            hotkeyRecorder, 'untitled'))
+            lambda: ui.listWidget.onAddPress(hotkeyRecorder))
 
     ui.deleteButton.clicked.connect(
             lambda: ui.listWidget.onDeletePress(hotkeyRecorder))

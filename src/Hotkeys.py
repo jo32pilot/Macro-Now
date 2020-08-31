@@ -302,6 +302,12 @@ class Hotkeys():
         idx = self.findHotkey(keys, recording=False)
         del self.mapper._hotkeys[idx]
 
+    def updateMacroSteps(self, macro, newSteps, loopNum):
+        keys = macro.getKeys()
+        time = macro.getTime()
+        idx = self.findHotkey(keys, recording=False)
+        self.setHotkey(idx, keys, newSteps, time, loopNum, recording=False)
+
     def setMacroToggle(self, keys, toggleFunc):
         """Used to stop a macro if the macro was set to loop until hotkey press.
 
