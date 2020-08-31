@@ -293,6 +293,15 @@ class Hotkeys():
         hotkey = HotKey(keys, func)
         addTo[idx] = hotkey
 
+    def removeHotkey(self, keys):
+        """Remove the hotkey with the passed in keys in the mapper.
+
+        Args:
+            keys (set): Set of KeyCodes that will map to some functionality.
+        """
+        idx = self.findHotkey(keys, recording=False)
+        del self.mapper._hotkeys[idx]
+
     def setMacroToggle(self, keys, toggleFunc):
         """Used to stop a macro if the macro was set to loop until hotkey press.
 

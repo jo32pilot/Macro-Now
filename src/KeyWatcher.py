@@ -99,7 +99,6 @@ class KeyWatcher():
             recorder (Hotkeys): Hotkey recorder used throughout the program.
 
         """
-        print('playing hotkey')
         runner = MacroRunner(steps, time, loopNum, self.mouseController, 
                 self.keyController, keys, recorder)
         runner.start()
@@ -256,10 +255,14 @@ class KeyWatcher():
     @synchronize
     def _updateTime(self):
         """Updates the hold time for each step in the holdKeys dict."""
-        for key, timeTup in self.keysDown.items():
+        for key, (press, startTime, stepType) in self.keysDown.items():
+            pressTime = time.time() - startTime
+            if stepType == StepEnum.KEY:
+                if pressTime > KeyboardEvent.KEY_PRESS_DELTA:
+                    press.setText('%.2f' % (time.time() - startTime))
             # Mouse scrolls have their own means of doing this
-            if not key == StepEnum.MOUSE_SCROLL:
-                timeTup[0].setText('%.2f' % (time.time() - timeTup[1]))
+            elif not key == StepEnum.MOUSE_SCROLL:
+                press.setText('%.2f' % (pressTime))
 
     def _update(self):
         """Updates the hold time for each event in the holdKeys dict.

@@ -149,12 +149,15 @@ class Ui_MainWindow(QWidget):
         if not self.listWidget.getCurrFocus():
             return
         self.recordButton.toggle()
+
+    def toggleRecordingWindow(self):
         if self.recordButton.isChecked():
             self.recordMesg = QLabel('Recording')
             self.recordMesg.move(0, 0)
             self.recordMesg.show()
-        else:
+        elif self.recordMesg:
             self.recordMesg.close()
+
 
 
 import qtresources_rc
@@ -188,6 +191,7 @@ if __name__ == "__main__":
     util.read(OUT_FILE, ui.listWidget, hotkeyRecorder)
 
     ui.recordButton.toggled.connect(watcher.toggleRecord)
+    ui.recordButton.toggled.connect(ui.toggleRecordingWindow)
     ui.backButton.clicked.connect(lambda: ui.backButtonEvent(watcher,
             hotkeyRecorder))
 
@@ -196,7 +200,8 @@ if __name__ == "__main__":
             lambda: ui.listWidget.listWidgetAddEditLabel(
             hotkeyRecorder, 'untitled'))
 
-    ui.deleteButton.clicked.connect(ui.listWidget.onDeletePress)
+    ui.deleteButton.clicked.connect(
+            lambda: ui.listWidget.onDeletePress(hotkeyRecorder))
 
     ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
 

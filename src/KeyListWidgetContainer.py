@@ -184,6 +184,9 @@ class KeyListWidgetStep(KeyListWidgetContainer):
     def getEditable(self):
         return self.editable
 
+    def getStepType(self):
+        return self.stepType
+
     def getParsed(self):
         """Serializes container to later write to file or playback.
 

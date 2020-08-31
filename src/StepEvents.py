@@ -67,6 +67,8 @@ class StepEvent():
 class KeyboardEvent(StepEvent):
     """Event class for keyboard events."""
 
+    KEY_PRESS_DELTA = 0.2
+
     def onPress(self, startTime, key):
         """Callback for when a key is pressed.
 
@@ -78,11 +80,11 @@ class KeyboardEvent(StepEvent):
                                of the macro.
             key (KeyCode): Key pressed.
         """
+        key = str(key)
         if key not in self.keysDown:
-            key = str(key)
             press = self.listWidget.listWidgetAddStep(
                     startTime, StepEnum.KEY, parseKey(key)).getPress()
-            self._dictAdd(key, (press, time.time()))
+            self._dictAdd(key, (press, time.time(), StepEnum.KEY))
 
     def onRelease(self, startTime, key):
         """Callback for when a key is released.
@@ -95,7 +97,7 @@ class KeyboardEvent(StepEvent):
                                for this callback).
             key (KeyCode): Key pressed.
         """
-        self._dictDel(key)
+        self._dictDel(str(key))
 
 class ClickEvent(StepEvent):
     """Event class for click events.
@@ -139,7 +141,7 @@ class ClickEvent(StepEvent):
             container = self.listWidget.listWidgetAddStep(
                     startTime, stepType, (x, y))
             press = container.getPress()
-            self._dictAdd(button, (press, time.time()))
+            self._dictAdd(button, (press, time.time(), stepType))
             self.dataCache[stepType] = (container, x, y)
         else:
             self._dictDel(button)
@@ -164,7 +166,8 @@ class WaitEvent(StepEvent):
         if len(self.keysDown) == 0:
             press = self.listWidget.listWidgetAddStep(
                     startTime, StepEnum.ACTIVE_WAIT, None).getPress()
-            self._dictAdd(StepEnum.ACTIVE_WAIT, (press, time.time()))
+            self._dictAdd(StepEnum.ACTIVE_WAIT, (press, time.time(),
+                    StepEnum.ACTIVE_WAIT))
         elif StepEnum.ACTIVE_WAIT in self.keysDown and len(self.keysDown) > 1:
             self._dictDel(StepEnum.ACTIVE_WAIT)
 
@@ -237,7 +240,9 @@ class ReleaselessEvent(StepEvent):
             self.endPosWidget = container.getEditable()
             self.stopStart = time.time()
 
-            self._dictAdd(stepType, (press, time.time()))
+            # stepType twice is redundant but needed to keep tuple
+            # sizes the same.
+            self._dictAdd(stepType, (press, time.time(), stepType))
         # Otherwise, update the current event data.
         else:
             if increment:

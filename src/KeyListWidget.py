@@ -246,7 +246,7 @@ class KeyListWidget(QListWidget):
         """Removes the last step added."""
         self._removeItem(self.count() - 1, self.stepContainers)
 
-    def onDeletePress(self):
+    def onDeletePress(self, recorder):
         widgetFocus = self.selectedItems()
         if not widgetFocus:
             return 
@@ -259,8 +259,11 @@ class KeyListWidget(QListWidget):
             self._removeItem(idx, self.parsedSteps, self.stepContainers)
             # TODO need to update the hotkey
         else:
-            # TODO need to unbind hotkey after removing macro
+            hotkeyKeys = self.macroWidgets[idx].getContainer().getKeys()
+            recorder.removeHotkey(hotkeyKeys)
             self._removeItem(idx, self.macroWidgets)
+            
+
 
     def _finalizeItem(self, item, container):
         """Performs the logic to display the item in the list widget."""

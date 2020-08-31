@@ -101,7 +101,6 @@ class MacroRunner(Thread):
                             key = VkKeyScan(data) if len(data) == 1 \
                                     else keyConst(data)
                             if isVKPress(key):
-                                print(key)
                                 keyboard.press(key)
                             else:
                                 key = MapVirtualKey(keyToVK(key), 0)
