@@ -196,6 +196,8 @@ if __name__ == "__main__":
             lambda: ui.listWidget.listWidgetAddEditLabel(
             hotkeyRecorder, 'untitled'))
 
+    ui.deleteButton.clicked.connect(ui.listWidget.onDeletePress)
+
     ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
 
     ui.configButton.clicked.connect(lambda: ui.configEvent())

@@ -115,7 +115,6 @@ class KeyListWidget(QListWidget):
         item = QListWidgetItem()
         container = KeyListWidgetMacro(recorder, self, text)
         self.macroWidgets.append(container)
-        print('made')
         self._finalizeItem(item, container)
         return container
 
@@ -228,11 +227,40 @@ class KeyListWidget(QListWidget):
         self.macroList = []
         self.currFocus = None
 
+    def _removeItem(self, idx, dataList, additionalList=None):
+        """Removes the item at the passed in index from the list.
+        
+        Args:
+            idx (int): Index of item to remove.
+            dataList (list): List containing the data of the widget to remove.
+                             The data will be removed from this list as well.
+            additionalList (list): Another list to remove data from at the
+                                   passed in index.
+        """
+        if additionalList:
+            del additionalList[idx]
+        del dataList[idx]
+        self.takeItem(idx)
+
     def removeLast(self):
         """Removes the last step added."""
-        del self.stepContainers[-1]
-        self.takeItem(self.count() - 1)
+        self._removeItem(self.count() - 1, self.stepContainers)
 
+    def onDeletePress(self):
+        widgetFocus = self.selectedItems()
+        if not widgetFocus:
+            return 
+
+        widgetFocus = widgetFocus[0]
+        idx = self.row(widgetFocus)
+
+        # If we're editting the steps of a macro
+        if self.currFocus: 
+            self._removeItem(idx, self.parsedSteps, self.stepContainers)
+            # TODO need to update the hotkey
+        else:
+            # TODO need to unbind hotkey after removing macro
+            self._removeItem(idx, self.macroWidgets)
 
     def _finalizeItem(self, item, container):
         """Performs the logic to display the item in the list widget."""
