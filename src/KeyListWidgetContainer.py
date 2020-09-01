@@ -7,12 +7,13 @@ displayed. Other times it refers to KeyListWidgetContainer itself and its
 subclasses.
 """
 
-from DoubleClickWidgets import EditLabelLine, EditLabelKey, \
-        EditLabelKeySequence, MacroWidget
-from StepConstants import StepEnum, stepImage, stepDescriptor
-from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtWidgets import QWidget, QLabel, QKeySequenceEdit, QComboBox, \
         QHBoxLayout
+from DoubleClickWidgets import EditLabelLine, EditLabelKey, \
+        EditLabelKeySequence, MacroWidget, EditLabelLineStep
+from StepConstants import StepEnum, stepImage, stepDescriptor
+from PyQt5.QtGui import QIntValidator, QDoubleValidator
+from PyQt5.QtCore import pyqtSignal
 from util import makeButton
 
 class KeyListWidgetContainer():
@@ -68,8 +69,6 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
             loopNum (int): Number of times to loop this macro.
         """
 
-        print('begin init wdiget')
-
         # Initialize widgets that will be displayed in the container widget.
         keyEdit = EditLabelKeySequence(recorder, 'Key here')
         editLabel = EditLabelLine(text)
@@ -79,8 +78,6 @@ class KeyListWidgetMacro(KeyListWidgetContainer):
         macroWidget = MacroWidget(listWidget, keyEdit, editLabel, loopSelector,
                 time)
         super().__init__(macroWidget)
-
-        print('after super init')
 
         if keys:
             # As long as hotkey exists, make sure key sequence
@@ -135,7 +132,29 @@ class KeyListWidgetStep(KeyListWidgetContainer):
                           created in this class.
     """
 
-    def __init__(self, startTime, stepType, data=None, holdTime=0, parent=None):
+    class StepWidget(QWidget):
+
+        onChange = pyqtSignal(object)
+
+        def __init__(self, idx, parent=None):
+            super().__init__(parent)
+            self.idx = idx
+            self.onChange.connect(
+                    lambda startTime: parent.stepUpdate.emit(self.getIdx(),
+                    startTime))
+
+        def getIdx(self):
+            return self.idx
+        
+        def setIdx(self, idx):
+            self.idx = idx
+
+        def _signalChange(self, startTime):
+            # index, stepType, data, time, startTime
+            print(type(self.parentWidget()))
+
+    def __init__(self, idx, startTime, stepType, data=None, holdTime=0,
+            parent=None):
         """Gathers and laysout all the components of the step widget.
 
         Args:
@@ -148,7 +167,8 @@ class KeyListWidgetStep(KeyListWidgetContainer):
             parent (QWidget): Widget to set as the parent of other widgets
                               created in this class.
         """
-        super().__init__(QWidget())
+        container = self.StepWidget(idx, parent)
+        super().__init__(container)
 
         self.stepType = stepType 
         self.valueLayout = None
@@ -159,7 +179,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         validator.setDecimals(2)
         self.pressTime = EditLabelLine(str(holdTime))
         self.pressTime.setValidator(validator)
-        self.startTime = EditLabelLine(str(startTime))
+        self.startTime = EditLabelLineStep(str(startTime), container)
         self.startTime.setValidator(validator)
 
         self.savedParent = parent

@@ -59,6 +59,10 @@ class KeyListWidget(QListWidget):
     mouseScroll = pyqtSignal(float, float, float, float, float)
     wait = pyqtSignal(float)
 
+    # index, stepType, data, time, startTime
+    #stepUpdate = pyqtSignal(int, object, object, float, float)
+    stepUpdate = pyqtSignal(int, float)
+
     def __init__(self, parent=None):
         """Initializes instance variables.
         
@@ -74,6 +78,7 @@ class KeyListWidget(QListWidget):
         self.keyWatcher = None
         self.currFocusIndex = 0
         self.loopNum = 0
+        self.stepUpdate.connect(self._stepChange)
 
     def setKeyWatcher(self, watcher):
         self.keyWatcher = watcher
@@ -134,7 +139,8 @@ class KeyListWidget(QListWidget):
         Return: The KeyListWidgetStep created.
         """
         item = QListWidgetItem()
-        container = KeyListWidgetStep(startTime, stepType, data, holdTime)
+        container = KeyListWidgetStep(len(self.stepContainers), startTime,
+                stepType, data, holdTime, parent=self)
         self._finalizeItem(item, container)
         self.stepContainers.append(container)
         return container
@@ -247,6 +253,17 @@ class KeyListWidget(QListWidget):
         """Removes the last step added."""
         self._removeItem(self.count() - 1, self.stepContainers)
 
+    def _insertStep(self, idx, item, dataList, widgetUpdate=False):
+        temp = item
+        for i in range(idx, len(dataList)):
+            temp = dataList[i]
+            if widgetUpdate:
+                item.getContainer().setIdx(i)
+            dataList[i] = item
+            item = temp
+        dataList.append(temp)
+
+
     def onAddPress(self, recorder):
         """Callback event for when the add button is pressed.
 
@@ -274,16 +291,17 @@ class KeyListWidget(QListWidget):
                 startTime = self.parsedSteps[idx][3]
 
             # Create and display new step
-            container = KeyListWidgetStep(startTime, StepEnum.ACTIVE_WAIT,
-                    None, 0)
+            container = KeyListWidgetStep(idx, startTime, StepEnum.ACTIVE_WAIT,
+                    None, 0, parent=self)
             self.insertItem(idx, item)
             self._finalizeItem(item, container)
             
             # Updates list so recording over / reloading these steps later
             # works.
-            self.stepContainers.insert(idx, container)
-            self.parsedSteps.insert(idx, (StepEnum.ACTIVE_WAIT, None, 0,
-                startTime))
+            self._insertStep(idx, container, self.stepContainers,
+                    widgetUpdate=True)
+            self._insertStep(idx, (StepEnum.ACTIVE_WAIT, None, 0,
+                startTime), self.parsedSteps)
 
             # Update hotkey with new step.
             recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
@@ -310,14 +328,21 @@ class KeyListWidget(QListWidget):
         # If we're editting the steps of a macro
         if self.currFocus: 
             self._removeItem(idx, self.parsedSteps, self.stepContainers)
-            self.updateMacroSteps(self.currFocus, self.parsedSteps,
+            for i in range(idx, len(self.stepContainers)):
+                self.stepContainers[i].getContainer().setIdx(i)
+            recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
                     self.loopNum)
         else:
             hotkeyKeys = self.macroWidgets[idx].getContainer().getKeys()
             recorder.removeHotkey(hotkeyKeys)
             self._removeItem(idx, self.macroWidgets)
             
-
+    def _stepChange(self, idx, newStartTime):
+        # TODO rest of tuple members
+        stepType, data, holdTime, startTime = self.parsedSteps[idx]
+        self.parsedSteps[idx] = (stepType, data, holdTime, newStartTime)
+        # TODO update macro somehow
+        recorder.updateMacroSteps
 
     def _finalizeItem(self, item, container):
         """Performs the logic to display the item in the list widget."""

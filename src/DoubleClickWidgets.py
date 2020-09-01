@@ -6,6 +6,7 @@ some new function on top of the widget's normal behavior.
 """
 
 from PyQt5.QtWidgets import QLabel, QWidget, QLineEdit, QKeySequenceEdit
+from PyQt5.QtCore import pyqtSignal
 import AppConfig
 
 class EditLabel(QLabel):
@@ -64,7 +65,6 @@ class EditLabel(QLabel):
         self.editor.show()
         self.editor.setFocus()
 
-
 class EditLabelLine(EditLabel):
     """Class to allow QLabel edits using QLineEdit."""
     def __init__(self, defaultText='', parent=None):
@@ -84,6 +84,16 @@ class EditLabelLine(EditLabel):
         """Overrided double click event to start QLabel edits."""
         self.editor.setText(self.savedText)
         self._beginEdit()
+
+class EditLabelLineStep(EditLabelLine):
+    """Derived from EditLabelLine to add parent signaling functionality"""
+
+    def __init__(self, defaultText='', parent=None):
+        super().__init__(defaultText, parent)
+        self.editor.returnPressed.connect(self._signalParent)
+
+    def _signalParent(self):
+        self.parentWidget().onChange.emit(float(self.getSavedText()))
 
 class EditLabelKey(EditLabel):
     """Class to allow QLabel edits using QKeySequenceEdits."""
@@ -202,7 +212,6 @@ class MacroWidget(QWidget):
 
     Class Attributes:
         ui (Ui_MainWindow): Main window of this program.
-
     """
 
     ui = None
