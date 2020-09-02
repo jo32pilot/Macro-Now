@@ -42,6 +42,7 @@ class KeyListWidget(QListWidget):
         parsedSteps (list): List tuples containing the data of steps to perform.
                             for the currently focused macro.
         keyWatcher (KeyWatcher): Macro recorder used throughout the program.
+        recorder (Hotkeys): Hotkey recorder used throughout the program.
         currFocusIndex (int): Index of the currently focused index in 
                               macroWidgets.
         loopNum (int): Number of times to loop the currently focused macro.
@@ -76,12 +77,16 @@ class KeyListWidget(QListWidget):
         self.stepContainers = []
         self.parsedSteps = []
         self.keyWatcher = None
+        self.recorder = None
         self.currFocusIndex = 0
         self.loopNum = 0
         self.stepUpdate.connect(self._stepChange)
 
     def setKeyWatcher(self, watcher):
         self.keyWatcher = watcher
+
+    def setRecorder(self, recorder):
+        self.recorder = recorder
     
     def setRecordTotalTime(self, time):
         """Sets the recordTotalTime member of this list's keyWatcher.
@@ -109,17 +114,16 @@ class KeyListWidget(QListWidget):
     def setParsedSteps(self, steps):
         self.parsedSteps = steps
 
-    def listWidgetAddEditLabel(self, recorder, text):
+    def listWidgetAddEditLabel(self, text):
         """Displays a new macro in the list.
 
         Args:
-            recorder (Hotkeys): Hotkey recorder used throughout the program.
             text (str): String to display as the macro name.
 
         Return: The KeyListWidgetMacro created
         """
         item = QListWidgetItem()
-        container = KeyListWidgetMacro(recorder, self, text)
+        container = KeyListWidgetMacro(self.recorder, self, text)
         self.macroWidgets.append(container)
         self._finalizeItem(item, container)
         return container
@@ -199,12 +203,11 @@ class KeyListWidget(QListWidget):
         currMacro[1] = self.parsedSteps
         currMacro[2] = time
 
-    def reloadMacro(self, recorder, name, steps, time, keys, keyString,
+    def reloadMacro(self, name, steps, time, keys, keyString,
             loopNum):
         """Creates and displays a macro widget.
 
         Args:
-            recorder (Hotkeys): Hotkey recorder used throughout the program.
             name (str): Name of the macro.
             steps (list): List of the macro's steps.
             time (float): Total time to run the macro.
@@ -215,22 +218,17 @@ class KeyListWidget(QListWidget):
             loopNum (int): Number of times to loop the macro.
         """
         item = QListWidgetItem()
-        container = KeyListWidgetMacro(recorder, self, name, steps,
+        container = KeyListWidgetMacro(self.recorder, self, name, steps,
                 time, keys, keyString, loopNum)
         self.macroWidgets.append(container)
         self._finalizeItem(item, container)
 
-    def reloadMacroList(self, recorder):
-        """Re-displays the previously backed up macro widgets.
-
-        Args:
-            recorder (Hotkeys): Hotkey recorder used throughout the program.
-        """
+    def reloadMacroList(self):
+        """Re-displays the previously backed up macro widgets."""
         self.clear()
         self.stepContainers = []
         for name, steps, time, keys, keyString, loopNum in self.macroList:
-            self.reloadMacro(recorder, name, steps, time, keys, keyString,
-                    loopNum)
+            self.reloadMacro(name, steps, time, keys, keyString, loopNum)
         self.macroList = []
         self.currFocus = None
 
@@ -264,16 +262,13 @@ class KeyListWidget(QListWidget):
         dataList.append(temp)
 
 
-    def onAddPress(self, recorder):
+    def onAddPress(self):
         """Callback event for when the add button is pressed.
 
         When looking at the list of macros, adds a new macro to the bottom
         of the list. When looking at macro steps, adds a new active wait step
         under the currently focused step, or to the bottom if no step is
         focused.
-
-        Args:
-            recorder (Hotkeys): The hotkey recorder used throughout the program.
         """
 
         # If we're looking at macro steps.
@@ -304,19 +299,16 @@ class KeyListWidget(QListWidget):
                 startTime), self.parsedSteps)
 
             # Update hotkey with new step.
-            recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
+            self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
                     self.loopNum)
         else:
-            self.listWidgetAddEditLabel(recorder, 'untitled')
+            self.listWidgetAddEditLabel('untitled')
         
 
-    def onDeletePress(self, recorder):
+    def onDeletePress(self):
         """Callback event for when the delete button is pressed.
 
         Essentially deletes the focused list item.
-
-        Args:
-            recorder (Hotkeys): The hotkey recorder used throughout the program.
         """
         widgetFocus = self.selectedItems()
         if not widgetFocus:
@@ -330,19 +322,21 @@ class KeyListWidget(QListWidget):
             self._removeItem(idx, self.parsedSteps, self.stepContainers)
             for i in range(idx, len(self.stepContainers)):
                 self.stepContainers[i].getContainer().setIdx(i)
-            recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
+            self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
                     self.loopNum)
         else:
             hotkeyKeys = self.macroWidgets[idx].getContainer().getKeys()
-            recorder.removeHotkey(hotkeyKeys)
+            self.recorder.removeHotkey(hotkeyKeys)
             self._removeItem(idx, self.macroWidgets)
             
     def _stepChange(self, idx, newStartTime):
         # TODO rest of tuple members
         stepType, data, holdTime, startTime = self.parsedSteps[idx]
         self.parsedSteps[idx] = (stepType, data, holdTime, newStartTime)
-        # TODO update macro somehow
-        recorder.updateMacroSteps
+        if idx == len(self.parsedSteps) - 1:
+            self.currFocus.setTime(newStartTime + holdTime)
+        self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
+                self.loopNum)
 
     def _finalizeItem(self, item, container):
         """Performs the logic to display the item in the list widget."""

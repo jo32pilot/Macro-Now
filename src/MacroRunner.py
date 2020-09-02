@@ -5,6 +5,7 @@ This file needs major refactoring.
 
 import pynput._util.win32_vks as VK
 from StepConstants import StepEnum, keyConst, keyToVK, isVKPress
+from StepEvents import KeyboardEvent
 from KeyboardController import pressKey, releaseKey
 from pynput.keyboard import KeyCode
 from win32api import MapVirtualKey, VkKeyScan
@@ -66,8 +67,10 @@ class MacroRunner(Thread):
                     # check if ready to start next step
                     if stepStart <= currTime:
 
+                        isKeyTap = stepType == StepEnum.KEY and holdTime == 0
                         nextStep += 1
-                        pq.put((holdTime, stepType, data, stepStart))
+                        if not isKeyTap:
+                            pq.put((holdTime, stepType, data, stepStart))
 
                         # perform step.
                         if stepType == StepEnum.MOUSE_LEFT:
@@ -98,15 +101,19 @@ class MacroRunner(Thread):
                             mouse.press(Button.right)
 
                         elif stepType == StepEnum.KEY:
+                            print(isKeyTap)
                             key = VkKeyScan(data) if len(data) == 1 \
                                     else keyConst(data)
+                            scanKey = MapVirtualKey(keyToVK(key), 0)
                             if isVKPress(key):
                                 keyboard.press(key)
+                            elif isKeyTap:
+                                pressKey(scanKey)
+                                releaseKey(scanKey)
                             else:
-                                key = MapVirtualKey(keyToVK(key), 0)
-                                keySet.add(key)
-                                pressKey(key)
-                                releaseKey(key)
+                                keySet.add(scanKey)
+                                pressKey(scanKey)
+                                releaseKey(scanKey)
 
                 # top denotes the step with the highest priority
                 topHoldTime, topStepType, topData, topStart = \

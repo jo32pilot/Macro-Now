@@ -74,7 +74,7 @@ def read(filename, listWidget, recorder):
                 keys = _readKeys(keys)
                 time = float(time)
                 loopNum = int(loopNum)
-                listWidget.reloadMacro(recorder, name, steps, time,
+                listWidget.reloadMacro(name, steps, time,
                         keys, keyString, loopNum)
                 recorder.addHotkey(keys, steps, time, loopNum, recording=False)
 

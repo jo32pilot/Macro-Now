@@ -114,12 +114,11 @@ class Ui_MainWindow(QWidget):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))   
 
-    def backButtonEvent(self, watcher, recorder):
+    def backButtonEvent(self, watcher):
         """Function to run upon clicking the back button.
 
         Args:
             watcher (KeyWatcher): Macro recorder used throughout the program.
-            recorder (Hotkeys): Hotkey recorder used throughout the program.
         """
         # Disable / enable buttons that shouldn't / should be pressed when
         # displaying macros.
@@ -128,7 +127,7 @@ class Ui_MainWindow(QWidget):
         ui.recordButton.setDisabled(True)
 
         # Re-display macros
-        self.listWidget.reloadMacroList(recorder)
+        self.listWidget.reloadMacroList()
         watcher.onBack()
 
     def configEvent(self):
@@ -186,21 +185,19 @@ if __name__ == "__main__":
     ui.recordShortcut.connect(
             lambda: ui.onRecordShortcut(hotkeyRecorder))
     ui.listWidget.setKeyWatcher(watcher)
+    ui.listWidget.setRecorder(hotkeyRecorder)
 
     # pass in config here too
     util.read(OUT_FILE, ui.listWidget, hotkeyRecorder)
 
     ui.recordButton.toggled.connect(watcher.toggleRecord)
     ui.recordButton.toggled.connect(ui.toggleRecordingWindow)
-    ui.backButton.clicked.connect(lambda: ui.backButtonEvent(watcher,
-            hotkeyRecorder))
+    ui.backButton.clicked.connect(lambda: ui.backButtonEvent(watcher))
 
     # lmao what is this line
-    ui.addButton.clicked.connect(
-            lambda: ui.listWidget.onAddPress(hotkeyRecorder))
+    ui.addButton.clicked.connect(ui.listWidget.onAddPress)
 
-    ui.deleteButton.clicked.connect(
-            lambda: ui.listWidget.onDeletePress(hotkeyRecorder))
+    ui.deleteButton.clicked.connect(ui.listWidget.onDeletePress)
 
     ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
 
