@@ -10,7 +10,7 @@ subclasses.
 from PyQt5.QtWidgets import QWidget, QLabel, QKeySequenceEdit, QComboBox, \
         QHBoxLayout
 from DoubleClickWidgets import EditLabelLine, EditLabelKey, \
-        EditLabelKeySequence, MacroWidget, EditLabelLineStep
+        EditLabelKeySequence, MacroWidget
 from StepConstants import StepEnum, stepImage, stepDescriptor
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtCore import pyqtSignal
@@ -134,14 +134,16 @@ class KeyListWidgetStep(KeyListWidgetContainer):
 
     class StepWidget(QWidget):
 
-        onChange = pyqtSignal(object)
+        startChange = pyqtSignal(float)
+        holdChange = pyqtSignal(float)
 
         def __init__(self, idx, parent=None):
             super().__init__(parent)
             self.idx = idx
-            self.onChange.connect(
-                    lambda startTime: parent.stepUpdate.emit(self.getIdx(),
-                    startTime))
+            startFunc = lambda startTime: self._updateStep(parent,startTime=startTime)
+            holdFunc = lambda holdTime: self._updateStep(parent, holdTime=holdTime)
+            self.startChange.connect(startFunc)
+            self.holdChange.connect(holdFunc)
 
         def getIdx(self):
             return self.idx
@@ -149,9 +151,11 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         def setIdx(self, idx):
             self.idx = idx
 
-        def _signalChange(self, startTime):
-            # index, stepType, data, time, startTime
-            print(type(self.parentWidget()))
+        def _updateStep(self, parent, stepType=None, data=None, holdTime=-1,
+                startTime=-1):
+            print(self.getIdx())
+            parent.stepUpdate.emit(self.getIdx(), stepType, data, holdTime,
+                    startTime)
 
     def __init__(self, idx, startTime, stepType, data=None, holdTime=0,
             parent=None):
@@ -177,9 +181,11 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         # TODO maybe need to cut precision
         validator = QDoubleValidator()
         validator.setDecimals(2)
-        self.pressTime = EditLabelLine(str(holdTime))
+        self.pressTime = EditLabelLine(str(holdTime), container.holdChange,
+                float, container)
         self.pressTime.setValidator(validator)
-        self.startTime = EditLabelLineStep(str(startTime), container)
+        self.startTime = EditLabelLine(str(startTime), container.startChange,
+                float, container)
         self.startTime.setValidator(validator)
 
         self.savedParent = parent

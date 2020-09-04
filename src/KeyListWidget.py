@@ -61,8 +61,7 @@ class KeyListWidget(QListWidget):
     wait = pyqtSignal(float)
 
     # index, stepType, data, time, startTime
-    #stepUpdate = pyqtSignal(int, object, object, float, float)
-    stepUpdate = pyqtSignal(int, float)
+    stepUpdate = pyqtSignal(int, object, object, float, float)
 
     def __init__(self, parent=None):
         """Initializes instance variables.
@@ -329,12 +328,18 @@ class KeyListWidget(QListWidget):
             self.recorder.removeHotkey(hotkeyKeys)
             self._removeItem(idx, self.macroWidgets)
             
-    def _stepChange(self, idx, newStartTime):
-        # TODO rest of tuple members
+    def _stepChange(self, idx, newStepType, newData, newHoldTime, newStartTime):
         stepType, data, holdTime, startTime = self.parsedSteps[idx]
-        self.parsedSteps[idx] = (stepType, data, holdTime, newStartTime)
+
+        stepType = newStepType if newStepType else stepType
+        data = newData if newData else data
+        holdTime = newHoldTime if newHoldTime != -1 else holdTime
+        startTime = newStartTime if newStartTime != -1 else startTime
+
+        self.parsedSteps[idx] = (stepType, data, holdTime, startTime)
+
         if idx == len(self.parsedSteps) - 1:
-            self.currFocus.setTime(newStartTime + holdTime)
+            self.currFocus.setTime(startTime + holdTime)
         self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
                 self.loopNum)
 

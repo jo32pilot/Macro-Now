@@ -67,10 +67,15 @@ class EditLabel(QLabel):
 
 class EditLabelLine(EditLabel):
     """Class to allow QLabel edits using QLineEdit."""
-    def __init__(self, defaultText='', parent=None):
+    def __init__(self, defaultText='', signal=None, signalParamType=None,
+            parent=None):
         """Initializes base class and sets up QLineEdit return event."""
         super().__init__(QLineEdit(), defaultText=defaultText, parent=parent)
         self.editor.returnPressed.connect(lambda: self.updateText())
+        if signal:
+            data = self.getSavedText()
+            data = signalParamType(data) if signalParamType else data
+            self.editor.returnPressed.connect(lambda: signal.emit(data))
 
     def updateText(self):
         """Gets text from QLineEdit and updates this label."""
@@ -84,16 +89,6 @@ class EditLabelLine(EditLabel):
         """Overrided double click event to start QLabel edits."""
         self.editor.setText(self.savedText)
         self._beginEdit()
-
-class EditLabelLineStep(EditLabelLine):
-    """Derived from EditLabelLine to add parent signaling functionality"""
-
-    def __init__(self, defaultText='', parent=None):
-        super().__init__(defaultText, parent)
-        self.editor.returnPressed.connect(self._signalParent)
-
-    def _signalParent(self):
-        self.parentWidget().onChange.emit(float(self.getSavedText()))
 
 class EditLabelKey(EditLabel):
     """Class to allow QLabel edits using QKeySequenceEdits."""
