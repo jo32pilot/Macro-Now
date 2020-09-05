@@ -67,14 +67,10 @@ class EditLabel(QLabel):
 
 class EditLabelLine(EditLabel):
     """Class to allow QLabel edits using QLineEdit."""
-    def __init__(self, defaultText='', signal=None, signalParamType=None,
-            parent=None):
+    def __init__(self, defaultText='', parent=None):
         """Initializes base class and sets up QLineEdit return event."""
         super().__init__(QLineEdit(), defaultText=defaultText, parent=parent)
         self.editor.returnPressed.connect(lambda: self.updateText())
-        if signal:
-            self.editor.returnPressed.connect(
-                    lambda: signal.emit(self._getDataCasted(signalParamType)))
 
     def updateText(self):
         """Gets text from QLineEdit and updates this label."""
@@ -93,16 +89,19 @@ class EditLabelLine(EditLabel):
         data = self.getSavedText()
         return signalParamType(data) if signalParamType else data
 
-class EditLabelCoord(EditLabelLine):
-    def __init__(self, coordNum, defaultText='', parent=None):
-        EditLabel.__init__(self, QLineEdit(), defaultText=defaultText,
-                parent=parent)
-        self.editor.returnPressed.connect(lambda: self.updateText())
-        changeFunc = lambda: parent.dataChange.emit(float(self.getSavedText()),
-                coordNum)
+class EditLabelTime(EditLabelLine):
+    def __init__(self, signal, defaultText='', parent=None):
+        super().__init__(defaultText, parent)
+        self.editor.returnPressed.connect(
+                lambda: signal.emit(float(self.getSavedText())))
+
+class EditLabelData(EditLabelLine):
+    def __init__(self, coordNum=-1, converter=str, defaultText='', parent=None):
+        super().__init__(defaultText, parent)
+        changeFunc = lambda: parent.dataChange.emit(
+                converter(self.getSavedText()), coordNum)
         self.editor.returnPressed.connect(changeFunc)
         
-
 class EditLabelKey(EditLabel):
     """Class to allow QLabel edits using QKeySequenceEdits."""
 

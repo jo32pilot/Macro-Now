@@ -10,7 +10,7 @@ subclasses.
 from PyQt5.QtWidgets import QWidget, QLabel, QKeySequenceEdit, QComboBox, \
         QHBoxLayout
 from DoubleClickWidgets import EditLabelLine, EditLabelKey, \
-        EditLabelKeySequence, MacroWidget, EditLabelCoord
+        EditLabelKeySequence, MacroWidget, EditLabelTime, EditLabelData
 from StepConstants import StepEnum, stepImage, stepDescriptor
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtCore import pyqtSignal
@@ -183,11 +183,11 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         # TODO maybe need to cut precision
         validator = QDoubleValidator()
         validator.setDecimals(2)
-        self.pressTime = EditLabelLine(str(holdTime), container.holdChange,
-                float, container)
+        self.pressTime = EditLabelTime(container.holdChange, str(holdTime),
+                container)
         self.pressTime.setValidator(validator)
-        self.startTime = EditLabelLine(str(startTime), container.startChange,
-                float, container)
+        self.startTime = EditLabelTime(container.startChange, str(startTime),
+                container)
         self.startTime.setValidator(validator)
 
         self.savedParent = parent
@@ -435,8 +435,8 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         validator = QIntValidator()
         container = self.getContainer()
         xCoordNum, yCoordNum = coordsNum * 2, coordsNum * 2 + 1
-        xCoord = EditLabelCoord(xCoordNum, x, container)
-        yCoord = EditLabelCoord(yCoordNum, y, container)
+        xCoord = EditLabelData(xCoordNum, int, x, container)
+        yCoord = EditLabelData(yCoordNum, int, y, container)
         xCoord.setValidator(validator)
         yCoord.setValidator(validator)
 
@@ -465,6 +465,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         """
         # TODO for recording new mouse clicks / scrolls, start by context menu
 
+        container = self.getContainer()
         typeContainer = QWidget()
         returnWidgets = [typeContainer]
         containerLayout = QHBoxLayout()
@@ -484,11 +485,13 @@ class KeyListWidgetStep(KeyListWidgetContainer):
 
         elif stepType == StepEnum.MOUSE_SCROLL:
             scrollWidget = QLabel(f'Y: ')
-            yDir = EditLabelLine(str(data))
+            yDir = EditLabelData(converter=int, defaultText=str(data),
+                    parent=container)
             yDir.setValidator(QIntValidator())
 
             containerLayout.addWidget(scrollWidget)
             containerLayout.addWidget(yDir)
+            containerLayout.addWidget(yDir.getEditor())
 
             returnWidgets.append(yDir)
 
