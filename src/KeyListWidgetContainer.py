@@ -10,7 +10,7 @@ subclasses.
 from PyQt5.QtWidgets import QWidget, QLabel, QKeySequenceEdit, QComboBox, \
         QHBoxLayout
 from DoubleClickWidgets import EditLabelLine, EditLabelKey, \
-        EditLabelKeySequence, MacroWidget
+        EditLabelKeySequence, MacroWidget, EditLabelCoord
 from StepConstants import StepEnum, stepImage, stepDescriptor
 from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtCore import pyqtSignal
@@ -136,14 +136,17 @@ class KeyListWidgetStep(KeyListWidgetContainer):
 
         startChange = pyqtSignal(float)
         holdChange = pyqtSignal(float)
+        dataChange = pyqtSignal(object, int)
 
         def __init__(self, idx, parent=None):
             super().__init__(parent)
             self.idx = idx
             startFunc = lambda startTime: self._updateStep(parent, startTime=startTime)
             holdFunc = lambda holdTime: self._updateStep(parent, holdTime=holdTime)
+            dataFunc = lambda data, dataIdx: self._updateStep(parent, data=data, dataIdx=dataIdx)
             self.startChange.connect(startFunc)
             self.holdChange.connect(holdFunc)
+            self.dataChange.connect(dataFunc)
 
         def getIdx(self):
             return self.idx
@@ -151,11 +154,10 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         def setIdx(self, idx):
             self.idx = idx
 
-        def _updateStep(self, parent, stepType=None, data=None, holdTime=-1,
-                startTime=-1):
-            print(f'holdTime {holdTime} startTime {startTime}')
-            parent.stepUpdate.emit(self.getIdx(), stepType, data, holdTime,
-                    startTime)
+        def _updateStep(self, parent, stepType=None, data=None, dataIdx=-1,
+                holdTime=-1, startTime=-1):
+            parent.stepUpdate.emit(self.getIdx(), stepType, data, dataIdx,
+                    holdTime, startTime)
 
     def __init__(self, idx, startTime, stepType, data=None, holdTime=0,
             parent=None):
@@ -421,7 +423,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         origButton.clicked.connect(lambda: self._changeButton(currType, 
                 origButton, typeButtonLayout, parentLayout))
             
-    def _makeCoordText(self, layout, x, y):
+    def _makeCoordText(self, layout, x, y, coordsNum=0):
         """Creates widgest to display coordinates.
 
         Args:
@@ -431,8 +433,10 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         """
         # Init widgets
         validator = QIntValidator()
-        xCoord = EditLabelLine(x)
-        yCoord = EditLabelLine(y)
+        container = self.getContainer()
+        xCoordNum, yCoordNum = coordsNum * 2, coordsNum * 2 + 1
+        xCoord = EditLabelCoord(xCoordNum, x, container)
+        yCoord = EditLabelCoord(yCoordNum, y, container)
         xCoord.setValidator(validator)
         yCoord.setValidator(validator)
 
@@ -472,10 +476,10 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         elif stepType == StepEnum.MOUSE_LEFT_DRAG or \
                 stepType == StepEnum.MOUSE_RIGHT_DRAG:
             self._makeCoordText(containerLayout, str(data[0][0]), 
-                    str(data[0][1]))
+                    str(data[0][1]), coordsNum=0)
             containerLayout.addWidget(QLabel(' -> '))
             coords = self._makeCoordText(containerLayout, 
-                    str(data[1][0]), str(data[1][1]))
+                    str(data[1][0]), str(data[1][1]), coordsNum=1)
             returnWidgets.append(coords)
 
         elif stepType == StepEnum.MOUSE_SCROLL:

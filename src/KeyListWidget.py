@@ -60,8 +60,8 @@ class KeyListWidget(QListWidget):
     mouseScroll = pyqtSignal(float, float, float, float, float)
     wait = pyqtSignal(float)
 
-    # index, stepType, data, time, startTime
-    stepUpdate = pyqtSignal(int, object, object, float, float)
+    # index, stepType, data, dataIdx, time, startTime
+    stepUpdate = pyqtSignal(int, object, object, int, float, float)
 
     def __init__(self, parent=None):
         """Initializes instance variables.
@@ -328,21 +328,48 @@ class KeyListWidget(QListWidget):
             self.recorder.removeHotkey(hotkeyKeys)
             self._removeItem(idx, self.macroWidgets)
             
-    def _stepChange(self, idx, newStepType, newData, newHoldTime, newStartTime):
+    def _createNewCoords(self, idx, origCoords, newCoord):
+        """
+        
+        In hindsight, I should have just stored coords as lists for easier
+        manipulation.
+
+        """
+        if type(origCoords[0]) is tuple:
+            (startX, startY), (endX, endY) = origCoords
+            if idx == 0:
+                return ((newCoord, startY), (endX, endY))
+            elif idx == 1:
+                return ((startX, newCoord), (endX, endY))
+            elif idx == 2:
+                return ((startX, startY), (newCoord, endY))
+            elif idx == 3:
+                return ((startX, startY), (endX, newCoord))
+        else:
+            x, y = origCoords
+            if idx == 0:
+                return (newCoord, y)
+            else:
+                return (x, newCoord)
+
+    def _stepChange(self, idx, newStepType, newData, dataIdx, newHoldTime,
+            newStartTime):
+
         stepType, data, holdTime, startTime = self.parsedSteps[idx]
 
         stepType = newStepType if newStepType else stepType
-        data = newData if newData else data
+        if dataIdx != -1:
+            data = self._createNewCoords(dataIdx, data, newData)
+        else:
+            data = newData if newData else data
         holdTime = newHoldTime if newHoldTime != -1 else holdTime
         startTime = newStartTime if newStartTime != -1 else startTime
 
         self.parsedSteps[idx] = (stepType, data, holdTime, startTime)
-
+        print(self.parsedSteps[idx])
         newTotal = startTime + holdTime
         if self.currFocus.getTime() < newTotal:
             self.currFocus.setTime(newTotal)
-        print(f'newStartTime {newStartTime} startTime {startTime}')
-        print(self.parsedSteps[idx])
         self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
                 self.loopNum)
 

@@ -94,6 +94,7 @@ class MacroRunner(Thread):
                             x, y = data[0]
                             mouse.position = (int(x), int(y))
                             mouse.press(Button.left)
+                            print('pressed')
 
                         elif stepType == StepEnum.MOUSE_RIGHT_DRAG:
                             x, y = data[0]
@@ -101,7 +102,6 @@ class MacroRunner(Thread):
                             mouse.press(Button.right)
 
                         elif stepType == StepEnum.KEY:
-                            print(isKeyTap)
                             key = VkKeyScan(data) if len(data) == 1 \
                                     else keyConst(data)
                             scanKey = MapVirtualKey(keyToVK(key), 0)
@@ -186,7 +186,6 @@ class MacroRunner(Thread):
 
                 # sleep for cpu
                 time.sleep(.02)
-                #time.sleep(.1)
 
         if resetHotkey:
             idx = recorder.findHotkey(keys, recording=False)

@@ -93,6 +93,16 @@ class EditLabelLine(EditLabel):
         data = self.getSavedText()
         return signalParamType(data) if signalParamType else data
 
+class EditLabelCoord(EditLabelLine):
+    def __init__(self, coordNum, defaultText='', parent=None):
+        EditLabel.__init__(self, QLineEdit(), defaultText=defaultText,
+                parent=parent)
+        self.editor.returnPressed.connect(lambda: self.updateText())
+        changeFunc = lambda: parent.dataChange.emit(float(self.getSavedText()),
+                coordNum)
+        self.editor.returnPressed.connect(changeFunc)
+        
+
 class EditLabelKey(EditLabel):
     """Class to allow QLabel edits using QKeySequenceEdits."""
 
