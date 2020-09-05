@@ -497,7 +497,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
 
         elif stepType == StepEnum.KEY:
             editDisp = data if data else 'Key Here'
-            editLabelKS = EditLabelKey(editDisp)
+            editLabelKS = EditLabelKey(editDisp, container)
             containerLayout.addWidget(editLabelKS)
             containerLayout.addWidget(editLabelKS.getEditor())
         elif stepType == StepEnum.ACTIVE_WAIT:

@@ -6,6 +6,7 @@ some new function on top of the widget's normal behavior.
 """
 
 from PyQt5.QtWidgets import QLabel, QWidget, QLineEdit, QKeySequenceEdit
+from StepConstants import keyConst
 from PyQt5.QtCore import pyqtSignal
 import AppConfig
 
@@ -109,17 +110,27 @@ class EditLabelKey(EditLabel):
         """Set up base class and QKeySequenceEdit edit finished event."""
         super().__init__(QKeySequenceEdit(), defaultText=defaultText,
                 parent=parent)
+        # TODO, change from editingFinished to on single key press, and on single key press,
+        # stop editing
         self.editor.editingFinished.connect(lambda: self.updateText())
+        self.editor.editingFinished.connect(
+                lambda: parent.dataChange.emit(self._getKey(), -1))
 
     def updateText(self):
         """Gets text from QKeySequenceEdit and updates this label."""
-        newText = self.editor.keySequence().toString()
+        newText = self.editor.keySequence().toString().lower()
         self._updateText(newText)
 
     def mouseDoubleClickEvent(self, event):
         """Overrided double click event to start QLabel edits."""
         self.editor.clear()
         self._beginEdit()
+
+    def _getKey(self):
+        key = self.getSavedText()
+        print(len(key))
+        print(key)
+        return key if len(key) == 1 else keyConst(key)
 
 class EditLabelKeySequence(EditLabel):
     """Class to allow QLabel edits using QKeySequenceEdits.
