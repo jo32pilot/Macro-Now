@@ -338,8 +338,11 @@ class KeyListWidget(QListWidget):
 
         self.parsedSteps[idx] = (stepType, data, holdTime, startTime)
 
-        if idx == len(self.parsedSteps) - 1:
-            self.currFocus.setTime(startTime + holdTime)
+        newTotal = startTime + holdTime
+        if self.currFocus.getTime() < newTotal:
+            self.currFocus.setTime(newTotal)
+        print(f'newStartTime {newStartTime} startTime {startTime}')
+        print(self.parsedSteps[idx])
         self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
                 self.loopNum)
 

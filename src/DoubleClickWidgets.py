@@ -73,9 +73,8 @@ class EditLabelLine(EditLabel):
         super().__init__(QLineEdit(), defaultText=defaultText, parent=parent)
         self.editor.returnPressed.connect(lambda: self.updateText())
         if signal:
-            data = self.getSavedText()
-            data = signalParamType(data) if signalParamType else data
-            self.editor.returnPressed.connect(lambda: signal.emit(data))
+            self.editor.returnPressed.connect(
+                    lambda: signal.emit(self._getDataCasted(signalParamType)))
 
     def updateText(self):
         """Gets text from QLineEdit and updates this label."""
@@ -89,6 +88,10 @@ class EditLabelLine(EditLabel):
         """Overrided double click event to start QLabel edits."""
         self.editor.setText(self.savedText)
         self._beginEdit()
+
+    def _getDataCasted(self, signalParamType=None):
+        data = self.getSavedText()
+        return signalParamType(data) if signalParamType else data
 
 class EditLabelKey(EditLabel):
     """Class to allow QLabel edits using QKeySequenceEdits."""

@@ -140,7 +140,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         def __init__(self, idx, parent=None):
             super().__init__(parent)
             self.idx = idx
-            startFunc = lambda startTime: self._updateStep(parent,startTime=startTime)
+            startFunc = lambda startTime: self._updateStep(parent, startTime=startTime)
             holdFunc = lambda holdTime: self._updateStep(parent, holdTime=holdTime)
             self.startChange.connect(startFunc)
             self.holdChange.connect(holdFunc)
@@ -153,7 +153,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
 
         def _updateStep(self, parent, stepType=None, data=None, holdTime=-1,
                 startTime=-1):
-            print(self.getIdx())
+            print(f'holdTime {holdTime} startTime {startTime}')
             parent.stepUpdate.emit(self.getIdx(), stepType, data, holdTime,
                     startTime)
 
