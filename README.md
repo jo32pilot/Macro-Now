@@ -40,9 +40,9 @@ In no particular order...
 - [x] Delete macros.
 - [ ] Undo edit.
 - [ ] Redo edit.
-- [ ] Delete macro step.
-- [ ] Manually add a macro step.
-- [ ] Manually edit macro step.
+- [x] Delete macro step.
+- [x] Manually add a macro step.
+- [x] Manually edit macro step.
 - [ ] Drag and drop macros for organizing.
 - [ ] Drag and drop macro steps for manual macro editing.
 - [ ] Lots o' configuration options.
