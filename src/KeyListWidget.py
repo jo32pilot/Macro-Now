@@ -108,10 +108,10 @@ class KeyListWidget(QListWidget):
         self.currFocus = macroWidget
 
     def getParsedSteps(self):
-        return self.parsedSteps
+        return self.macroList[self.currFocusIndex][1]
 
     def setParsedSteps(self, steps):
-        self.parsedSteps = steps
+        self.macroList[self.currFocusIndex][1] = steps
 
     def listWidgetAddEditLabel(self, text):
         """Displays a new macro in the list.
@@ -154,9 +154,9 @@ class KeyListWidget(QListWidget):
         Once parsed, the tuple containing the step's data will be stored
         into parsedSteps.
         """
-        self.parsedSteps = []
+        self.macroList[self.currFocusIndex][1] = []
         for step in self.stepContainers:
-            self.parsedSteps.append(step.getParsed())
+            self.macroList[self.currFocusIndex][1].append(step.getParsed())
 
     def getMacroList(self, write=False):
         """Returns the serialized macro widgets.
@@ -191,15 +191,14 @@ class KeyListWidget(QListWidget):
         self.macroList = self.getMacroList()
         self.macroWidgets = []
 
-    def updateMacroList(self, time):
-        """Updates the data of the currently focused macro within macroList.
+    def updateMacroTime(self, time):
+        """Updates the total of the currently focused macro within macroList.
 
         Args:
             time (float): Total time it takes to run this macro.
         """
         currMacro = self.macroList[self.currFocusIndex] 
         # TODO maybe can phase out self.parsedSteps and just use currMacro[1]?
-        currMacro[1] = self.parsedSteps
         currMacro[2] = time
 
     def reloadMacro(self, name, steps, time, keys, keyString,
@@ -281,8 +280,8 @@ class KeyListWidget(QListWidget):
 
             # If a step is focused
             if widgetFocus:
-                idx = self.row(widgetFocus[0])
-                startTime = self.parsedSteps[idx][3]
+                idx = self.row(widgetFocus[0]) + 1
+                startTime = self.macroList[self.currFocusIndex][1][idx - 1][3]
 
             # Create and display new step
             container = KeyListWidgetStep(idx, startTime, StepEnum.ACTIVE_WAIT,
@@ -295,11 +294,11 @@ class KeyListWidget(QListWidget):
             self._insertStep(idx, container, self.stepContainers,
                     widgetUpdate=True)
             self._insertStep(idx, (StepEnum.ACTIVE_WAIT, None, 0,
-                startTime), self.parsedSteps)
+                startTime), self.macroList[self.currFocusIndex][1])
 
             # Update hotkey with new step.
-            self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
-                    self.loopNum)
+            self.recorder.updateMacroSteps(self.currFocus, 
+                    self.macroList[self.currFocusIndex][1], self.loopNum)
         else:
             self.listWidgetAddEditLabel('untitled')
         
@@ -318,11 +317,12 @@ class KeyListWidget(QListWidget):
 
         # If we're editting the steps of a macro
         if self.currFocus: 
-            self._removeItem(idx, self.parsedSteps, self.stepContainers)
+            self._removeItem(idx, self.macroList[self.currFocusIndex][1],
+                    self.stepContainers)
             for i in range(idx, len(self.stepContainers)):
                 self.stepContainers[i].getContainer().setIdx(i)
-            self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
-                    self.loopNum)
+            self.recorder.updateMacroSteps(self.currFocus,
+                    self.macroList[self.currFocusIndex][1], self.loopNum)
         else:
             hotkeyKeys = self.macroWidgets[idx].getContainer().getKeys()
             self.recorder.removeHotkey(hotkeyKeys)
@@ -355,23 +355,24 @@ class KeyListWidget(QListWidget):
     def _stepChange(self, idx, newStepType, newData, dataIdx, newHoldTime,
             newStartTime):
 
-        stepType, data, holdTime, startTime = self.parsedSteps[idx]
+        stepType, data, holdTime, startTime = \
+                self.macroList[self.currFocusIndex][1][idx]
 
         stepType = newStepType if newStepType else stepType
         if dataIdx != -1:
             data = self._createNewCoords(dataIdx, data, newData)
         else:
-            data = newData if newData else data
+            data = newData if (not newData is None)  else data
         holdTime = newHoldTime if newHoldTime != -1 else holdTime
         startTime = newStartTime if newStartTime != -1 else startTime
 
-        self.parsedSteps[idx] = (stepType, data, holdTime, startTime)
-        print(self.parsedSteps[idx])
+        self.macroList[self.currFocusIndex][1][idx] = \
+                (stepType, data, holdTime, startTime)
         newTotal = startTime + holdTime
         if self.currFocus.getTime() < newTotal:
             self.currFocus.setTime(newTotal)
-        self.recorder.updateMacroSteps(self.currFocus, self.parsedSteps,
-                self.loopNum)
+        self.recorder.updateMacroSteps(self.currFocus,
+                self.macroList[self.currFocusIndex][1], self.loopNum)
 
     def _finalizeItem(self, item, container):
         """Performs the logic to display the item in the list widget."""

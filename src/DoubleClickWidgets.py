@@ -128,8 +128,6 @@ class EditLabelKey(EditLabel):
 
     def _getKey(self):
         key = self.getSavedText()
-        print(len(key))
-        print(key)
         return key if len(key) == 1 else keyConst(key)
 
 class EditLabelKeySequence(EditLabel):

@@ -137,6 +137,7 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         startChange = pyqtSignal(float)
         holdChange = pyqtSignal(float)
         dataChange = pyqtSignal(object, int)
+        buttonChange = pyqtSignal(object, object)
 
         def __init__(self, idx, parent=None):
             super().__init__(parent)
@@ -144,9 +145,11 @@ class KeyListWidgetStep(KeyListWidgetContainer):
             startFunc = lambda startTime: self._updateStep(parent, startTime=startTime)
             holdFunc = lambda holdTime: self._updateStep(parent, holdTime=holdTime)
             dataFunc = lambda data, dataIdx: self._updateStep(parent, data=data, dataIdx=dataIdx)
+            buttonFunc = lambda stepType, data: self._updateStep(parent, stepType=stepType, data=data)
             self.startChange.connect(startFunc)
             self.holdChange.connect(holdFunc)
             self.dataChange.connect(dataFunc)
+            self.buttonChange.connect(buttonFunc)
 
         def getIdx(self):
             return self.idx
@@ -392,6 +395,23 @@ class KeyListWidgetStep(KeyListWidgetContainer):
                 hLayout, (oldCoords, newCoords), manualEdit=False)
 
 
+    def _changeTypeUpdateData(self, currType, stepType, origButton,
+            typeButtonLayout, parentLayout):
+        data = None
+        if stepType == StepEnum.MOUSE_LEFT or stepType == StepEnum.MOUSE_RIGHT:
+            data = (0, 0)
+        elif stepType == StepEnum.MOUSE_SCROLL:
+            data = 0
+        elif stepType == StepEnum.MOUSE_LEFT_DRAG or \
+                stepType == StepEnum.MOUSE_RIGHT_DRAG:
+            data = ((0, 0), (0, 0))
+        elif stepType == StepEnum.KEY:
+            data = 'space'
+
+        self._changeType(currType, stepType, origButton, typeButtonLayout,
+                parentLayout, data=data)
+        self.getContainer().buttonChange.emit(stepType, data)
+
     def _insertOptions(self, currType, origButton, typeButtonLayout,
             parentLayout):
         """Creates buttons to change to a specific step type.
@@ -406,12 +426,12 @@ class KeyListWidgetStep(KeyListWidgetContainer):
         """
         for stepType in StepEnum:
             if currType != stepType:
-                button = makeButton(self.savedButton, stepImage(stepType))
+                button = makeButton(self.savedParent, stepImage(stepType))
 
                 # don't know why I can't just pass in stepType into
                 # changeType directly instead of using a keyword arg
                 # in the lambda, but it won't work otherwise
-                event = lambda ch, stepType=stepType: self._changeType(currType,
+                event = lambda ch, stepType=stepType: self._changeTypeUpdateData(currType,
                         stepType, origButton, typeButtonLayout, parentLayout)
 
                 button.clicked.connect(event)

@@ -192,15 +192,11 @@ if __name__ == "__main__":
 
     ui.recordButton.toggled.connect(watcher.toggleRecord)
     ui.recordButton.toggled.connect(ui.toggleRecordingWindow)
+
     ui.backButton.clicked.connect(lambda: ui.backButtonEvent(watcher))
-
-    # lmao what is this line
     ui.addButton.clicked.connect(ui.listWidget.onAddPress)
-
     ui.deleteButton.clicked.connect(ui.listWidget.onDeletePress)
-
     ui.saveButton.clicked.connect(lambda: util.write(OUT_FILE, ui.listWidget))
-
     ui.configButton.clicked.connect(lambda: ui.configEvent())
 
     # Disable buttons that shouldn't be pressed when displaying macros.

@@ -172,7 +172,7 @@ class KeyWatcher():
                     else self.recordTotalTime + newTotalTime)
 
             self.listWidget.parseSteps()
-            self.listWidget.updateMacroList(self.recordTotalTime)
+            self.listWidget.updateMacroTime(self.recordTotalTime)
 
             hotkey = currFocus.getKeys()
 
